@@ -6,7 +6,7 @@ const FalconHeavyProps = {
 	weight: 1450,
 	stageFirst: {
 		booster: { fuel: 10000, power: 3 },
-		maxSpeed: 3000,
+		maxSpeed: 10000,
 	},
 }
 
