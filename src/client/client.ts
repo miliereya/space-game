@@ -2,8 +2,8 @@ import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 import Stats from 'three/examples/jsm/libs/stats.module'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
-
-let moveCoordinates = []
+import { applyGravity } from '../utils'
+import { FalconHeavy } from '../rockets'
 
 const scene = new THREE.Scene()
 scene.add(new THREE.AxesHelper(5))
@@ -21,10 +21,11 @@ camera.position.z = 55
 camera.position.y = 42
 
 let mixer: THREE.AnimationMixer
+let rocketModel: THREE.Mesh
 
-let rocket: THREE.Mesh
+const rocket = new FalconHeavy()
 
-const geo = new THREE.PlaneGeometry(50, 50, 8, 8)
+const geo = new THREE.PlaneGeometry(5000, 5000, 8, 8)
 const mat = new THREE.MeshBasicMaterial({
 	color: 0xfffff0,
 	side: THREE.DoubleSide,
@@ -42,7 +43,7 @@ loader.load(
 		gltf.scene.children[0].scale.set(0.18, 0.18, 0.18)
 		gltf.scene.children[0].position.set(0.0, 40, 0)
 		scene.add(gltf.scene)
-		rocket = gltf.scene.children[0] as THREE.Mesh
+		rocketModel = gltf.scene.children[0] as THREE.Mesh
 		mixer = new THREE.AnimationMixer(gltf.scene)
 		console.log(mixer)
 		const launch = THREE.AnimationClip.findByName(gltf.animations, 'Launch')
@@ -50,7 +51,7 @@ loader.load(
 		// setTimeout(() => {
 		// 	rocket.children[0].children[0].children[0].removeFromParent()
 		// }, 500)
-		const action = mixer.clipAction(launch)
+		// const action = mixer.clipAction(launch)
 		// action.setLoop(THREE.LoopOnce, 1)
 		// action.play()
 	},
@@ -68,7 +69,6 @@ renderer.setSize(window.innerWidth, window.innerHeight)
 document.body.appendChild(renderer.domElement)
 
 const controls = new OrbitControls(camera, renderer.domElement)
-// controls.enablePan = false
 controls.minDistance = 30
 controls.maxDistance = 300
 
@@ -82,26 +82,50 @@ function onWindowResize() {
 
 const stats = new Stats()
 const rocketStats = document.createElement('div')
+const buttonsWrapper = document.createElement('div')
 rocketStats.id = 'stats'
+buttonsWrapper.id = 'buttons_wrapper'
+
+const stageOneBoostersOn = document.createElement('button')
+stageOneBoostersOn.id = 'button_1'
+stageOneBoostersOn.innerHTML = 'ON'
+stageOneBoostersOn.addEventListener(
+	'click',
+	() => rocket.turnOnAllFirstStageBoosters()
+)
+
+const stageOneBoostersOff = document.createElement('button')
+stageOneBoostersOff.id = 'button_2'
+stageOneBoostersOff.innerHTML = 'OFF'
+stageOneBoostersOff.addEventListener(
+	'click',
+	() => rocket.turnOffAllFirstStageBoosters()
+)
+
+buttonsWrapper.appendChild(stageOneBoostersOn)
+buttonsWrapper.appendChild(stageOneBoostersOff)
+
+document.body.appendChild(buttonsWrapper)
 document.body.appendChild(stats.dom)
 document.body.appendChild(rocketStats)
 
 const clock = new THREE.Clock()
 
-const direction = new THREE.Vector3()
-
 function animate() {
 	const rocketStatsDiv = document.getElementById('stats')
-	if (rocketStatsDiv && rocket)
-		rocketStatsDiv.innerHTML =
-			`Rocket X: ${Math.round(rocket.position.x)} Rocket Y: ${Math.round(rocket.position.y)} Rocket Z: ${Math.round(rocket.position.z)}`
+	if (rocketStatsDiv && rocketModel)
+		rocketStatsDiv.innerHTML = `Rocket X: ${Math.round(
+			rocketModel.position.x
+		)} Rocket Y: ${Math.round(rocketModel.position.y)} Rocket Z: ${Math.round(
+			rocketModel.position.z
+		)}`
 	if (mixer) {
 		mixer.update(clock.getDelta())
 	}
-	if (rocket) {
-		rocket.position.y += 0.1
-		camera.position.y += 0.1
-		camera.lookAt(rocket.getWorldPosition(controls.target))
+	if (rocketModel) {
+		rocket.accelerate(rocketModel.position)
+		camera.position.y = rocketModel.position.y
+		camera.lookAt(rocketModel.getWorldPosition(controls.target))
 
 		controls.update()
 		// direction.subVectors(camera.position, controls.target)
