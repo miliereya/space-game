@@ -77,7 +77,7 @@ export class FalconHeavy extends Rocket {
 		} else {
 			position.y += this.acceleration / 2000
 		}
-		console.log(this.acceleration)
+		return this.acceleration / 2000
 	}
 
 	disconnectBoosters() {}

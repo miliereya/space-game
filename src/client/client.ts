@@ -44,7 +44,6 @@ loader.load(
 		scene.add(gltf.scene)
 		rocketModel = gltf.scene.children[0] as THREE.Mesh
 		mixer = new THREE.AnimationMixer(gltf.scene)
-		console.log(mixer)
 		const launch = THREE.AnimationClip.findByName(gltf.animations, 'Launch')
 		THREE.AnimationUtils.makeClipAdditive(launch)
 		// setTimeout(() => {
@@ -88,17 +87,15 @@ buttonsWrapper.id = 'buttons_wrapper'
 const stageOneBoostersOn = document.createElement('button')
 stageOneBoostersOn.id = 'button_1'
 stageOneBoostersOn.innerHTML = 'ON'
-stageOneBoostersOn.addEventListener(
-	'click',
-	() => rocket.turnOnAllFirstStageBoosters()
+stageOneBoostersOn.addEventListener('click', () =>
+	rocket.turnOnAllFirstStageBoosters()
 )
 
 const stageOneBoostersOff = document.createElement('button')
 stageOneBoostersOff.id = 'button_2'
 stageOneBoostersOff.innerHTML = 'OFF'
-stageOneBoostersOff.addEventListener(
-	'click',
-	() => rocket.turnOffAllFirstStageBoosters()
+stageOneBoostersOff.addEventListener('click', () =>
+	rocket.turnOffAllFirstStageBoosters()
 )
 
 buttonsWrapper.appendChild(stageOneBoostersOn)
@@ -122,10 +119,9 @@ function animate() {
 		mixer.update(clock.getDelta())
 	}
 	if (rocketModel) {
-		rocket.accelerate(rocketModel.position)
-		camera.position.y = rocketModel.position.y
+		const acceleration = rocket.accelerate(rocketModel.position)
 		camera.lookAt(rocketModel.getWorldPosition(controls.target))
-
+		if (acceleration > 1 || acceleration < 1) camera.position.y += acceleration
 		controls.update()
 		// direction.subVectors(camera.position, controls.target)
 		// // direction.normalize().multiplyScalar(10)
