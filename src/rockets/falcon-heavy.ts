@@ -1,4 +1,3 @@
-import { Vector3 } from 'three'
 import { Rocket, RocketBooster } from '../instances'
 import { gravityValue } from '../config'
 
@@ -15,6 +14,7 @@ type FalconStage = 1 | 2 | 3 | 4
 export class FalconHeavy extends Rocket {
 	stage: FalconStage = 1
 	acceleration = 0
+	rotation = 0
 	stageFirst = {
 		booster_1: new RocketBooster(
 			FalconHeavyProps.stageFirst.booster.fuel,
@@ -36,7 +36,7 @@ export class FalconHeavy extends Rocket {
 
 	turnOnAllFirstStageBoosters() {
 		this.stageFirst.booster_1.on()
-		this.stageFirst.booster_2.on()
+		// this.stageFirst.booster_2.on()
 		this.stageFirst.booster_3.on()
 	}
 
@@ -46,22 +46,36 @@ export class FalconHeavy extends Rocket {
 		this.stageFirst.booster_3.off()
 	}
 
-	accelerate(position: Vector3) {
+	accelerate(
+		model: THREE.Mesh<
+			THREE.BufferGeometry<THREE.NormalBufferAttributes>,
+			THREE.Material | THREE.Material[],
+			THREE.Object3DEventMap
+		>
+	) {
+		const { position } = model
+
 		let acceleration = 0
+		let rotation = 0
 
 		if (this.stage === 1) {
 			const { booster_1, booster_2, booster_3 } = this.stageFirst
 
-			if (booster_1.isActive) {
-				acceleration += booster_1.burn()
+			if (booster_2.isActive) {
+				const power = booster_1.burn()
+				acceleration += power
 			}
 
-			if (booster_2.isActive) {
-				acceleration += booster_2.burn()
+			if (booster_1.isActive) {
+				const power = booster_1.burn()
+				acceleration += power
+				rotation += booster_2.isActive ? 0.00003 : 0.0001
 			}
 
 			if (booster_3.isActive) {
-				acceleration += booster_3.burn()
+				const power = booster_1.burn()
+				acceleration += power
+				// rotation -= booster_2.isActive ? 0.00003 : 0.0001
 			}
 		}
 		this.acceleration +=
@@ -71,12 +85,20 @@ export class FalconHeavy extends Rocket {
 						FalconHeavyProps.stageFirst.maxSpeed)
 				: acceleration
 		this.acceleration -= gravityValue
+
+		if (position.y > 40 && rotation) {
+			this.rotation +=
+				this.rotation > 0 ? (rotation * this.rotation) / 0.01 : rotation
+			model.rotateY(this.rotation)
+		}
+
 		if (position.y < 40) {
 			position.y = 40
 			this.acceleration = 0
 		} else {
 			position.y += this.acceleration / 2000
 		}
+
 		return this.acceleration / 2000
 	}
 

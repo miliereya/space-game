@@ -3,10 +3,21 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 import Stats from 'three/examples/jsm/libs/stats.module'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
 import { FalconHeavy } from '../rockets'
+import * as CANNON from 'cannon-es'
+import CannonDebugger from 'cannon-es-debugger'
 
 const scene = new THREE.Scene()
-scene.add(new THREE.AxesHelper(5))
+scene.add(new THREE.AxesHelper(5000))
 scene.background = new THREE.Color(0xff0fff)
+
+const world = new CANNON.World()
+world.gravity.set(0, -9.82, 0)
+
+const planeShape = new CANNON.Plane()
+const planeBody = new CANNON.Body({ mass: 0 })
+planeBody.addShape(planeShape)
+planeBody.quaternion.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), -Math.PI / 2)
+world.addBody(planeBody)
 
 scene.add(new THREE.AmbientLight('', 3))
 
@@ -24,7 +35,7 @@ let rocketModel: THREE.Mesh
 
 const rocket = new FalconHeavy()
 
-const geo = new THREE.PlaneGeometry(5000, 5000, 8, 8)
+const geo = new THREE.PlaneGeometry(500, 500, 8, 8)
 const mat = new THREE.MeshBasicMaterial({
 	color: 0xfffff0,
 	side: THREE.DoubleSide,
@@ -35,14 +46,26 @@ plane.rotateX(Math.PI / 2)
 
 scene.add(plane)
 
+const rocketShape = new CANNON.Cylinder(2, 2, 40)
+const rocketBody = new CANNON.Body({ mass: 1 })
+rocketBody.addShape(rocketShape)
+
 const loader = new GLTFLoader()
 loader.load(
 	'models/spacex_falcon_heavy.glb',
 	function (gltf) {
-		gltf.scene.children[0].scale.set(0.18, 0.18, 0.18)
-		gltf.scene.children[0].position.set(0.0, 40, 0)
 		scene.add(gltf.scene)
 		rocketModel = gltf.scene.children[0] as THREE.Mesh
+		rocketModel.scale.set(0.18, 0.18, 0.18)
+		rocketModel.position.set(0.0, 40, 0)
+
+		rocketModel.updateMatrix()
+
+		rocketBody.position.x = rocketModel.position.x
+		rocketBody.position.y = rocketModel.position.y
+		rocketBody.position.z = rocketModel.position.z
+		world.addBody(rocketBody)
+
 		mixer = new THREE.AnimationMixer(gltf.scene)
 		const launch = THREE.AnimationClip.findByName(gltf.animations, 'Launch')
 		THREE.AnimationUtils.makeClipAdditive(launch)
@@ -106,8 +129,14 @@ document.body.appendChild(stats.dom)
 document.body.appendChild(rocketStats)
 
 const clock = new THREE.Clock()
+let delta
+
+const cannonDebugger = CannonDebugger(scene, world, {
+	color: 0xff0000,
+})
 
 function animate() {
+	cannonDebugger.update()
 	const rocketStatsDiv = document.getElementById('stats')
 	if (rocketStatsDiv && rocketModel)
 		rocketStatsDiv.innerHTML = `Rocket X: ${Math.round(
@@ -115,13 +144,27 @@ function animate() {
 		)} Rocket Y: ${Math.round(rocketModel.position.y)} Rocket Z: ${Math.round(
 			rocketModel.position.z
 		)}`
+	delta = Math.min(clock.getDelta(), 0.1)
+	world.step(delta)
 	if (mixer) {
 		mixer.update(clock.getDelta())
 	}
 	if (rocketModel) {
-		const acceleration = rocket.accelerate(rocketModel.position)
-		camera.lookAt(rocketModel.getWorldPosition(controls.target))
-		if (acceleration > 1 || acceleration < 1) camera.position.y += acceleration
+		rocketModel.position.set(
+			rocketBody.position.x,
+			rocketBody.position.y,
+			rocketBody.position.z
+		)
+		// rocketModel.quaternion.set(
+		// 	rocketBody.quaternion.x,
+		// 	rocketBody.quaternion.y,
+		// 	rocketBody.quaternion.z,
+		// 	rocketBody.quaternion.w
+		// )
+		// const rocketAcceleration = rocket.accelerate(rocketModel)
+		// camera.lookAt(rocketModel.getWorldPosition(controls.target))
+		// if (rocketAcceleration > 1 || rocketAcceleration < 1)
+		// 	camera.position.y += rocketAcceleration
 		controls.update()
 		// direction.subVectors(camera.position, controls.target)
 		// // direction.normalize().multiplyScalar(10)
