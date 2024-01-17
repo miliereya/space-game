@@ -5,6 +5,7 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
 import { FalconHeavy } from '../rockets'
 import * as CANNON from 'cannon-es'
 import CannonDebugger from 'cannon-es-debugger'
+import { CannonUtils } from '../utils'
 
 const scene = new THREE.Scene()
 scene.add(new THREE.AxesHelper(5000))
@@ -46,25 +47,31 @@ plane.rotateX(Math.PI / 2)
 
 scene.add(plane)
 
-const rocketShape = new CANNON.Cylinder(2, 2, 40)
-const rocketBody = new CANNON.Body({ mass: 1 })
-rocketBody.addShape(rocketShape)
+let rocketBody: CANNON.Body
 
 const loader = new GLTFLoader()
 loader.load(
-	'models/spacex_falcon_heavy.glb',
+	'models/test.glb',
 	function (gltf) {
 		scene.add(gltf.scene)
 		rocketModel = gltf.scene.children[0] as THREE.Mesh
 		rocketModel.scale.set(0.18, 0.18, 0.18)
-		rocketModel.position.set(0.0, 40, 0)
+		rocketModel.position.set(0.0, 60, 0)
+		gltf.scene.traverse((child) => {
+			if ((child as THREE.Mesh).geometry) {
+				const rocketShape = CannonUtils.CreateTrimesh(
+					(child as THREE.Mesh).geometry
+				)
+				console.log(rocketShape)
+				rocketModel.quaternion
+				rocketBody = new CANNON.Body({ mass: 1, shape: rocketShape })
 
-		rocketModel.updateMatrix()
-
-		rocketBody.position.x = rocketModel.position.x
-		rocketBody.position.y = rocketModel.position.y
-		rocketBody.position.z = rocketModel.position.z
-		world.addBody(rocketBody)
+				rocketBody.position.x = rocketModel.position.x
+				rocketBody.position.y = rocketModel.position.y
+				rocketBody.position.z = rocketModel.position.z
+				world.addBody(rocketBody)
+			}
+		})
 
 		mixer = new THREE.AnimationMixer(gltf.scene)
 		const launch = THREE.AnimationClip.findByName(gltf.animations, 'Launch')
@@ -149,18 +156,18 @@ function animate() {
 	if (mixer) {
 		mixer.update(clock.getDelta())
 	}
-	if (rocketModel) {
+	if (rocketModel && rocketBody) {
 		rocketModel.position.set(
 			rocketBody.position.x,
 			rocketBody.position.y,
 			rocketBody.position.z
 		)
-		// rocketModel.quaternion.set(
-		// 	rocketBody.quaternion.x,
-		// 	rocketBody.quaternion.y,
-		// 	rocketBody.quaternion.z,
-		// 	rocketBody.quaternion.w
-		// )
+		rocketModel.quaternion.set(
+			rocketBody.quaternion.x,
+			rocketBody.quaternion.y,
+			rocketBody.quaternion.z,
+			rocketBody.quaternion.w
+		)
 		// const rocketAcceleration = rocket.accelerate(rocketModel)
 		// camera.lookAt(rocketModel.getWorldPosition(controls.target))
 		// if (rocketAcceleration > 1 || rocketAcceleration < 1)
