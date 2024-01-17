@@ -177,15 +177,15 @@ function logic() {
 }
 
 let deltaFps = 20
-let interval = 1 / 100
+let interval = 1 / 60
 
 function animate() {
+	deltaFps += clock.getDelta()
 	if (deltaFps > interval) {
 		logic()
 
 		deltaFps = deltaFps % interval
 	}
-	deltaFps += clock.getDelta()
 	requestAnimationFrame(animate)
 	render()
 }
