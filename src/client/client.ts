@@ -5,7 +5,6 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
 import { FalconHeavy } from '../rockets'
 import * as CANNON from 'cannon-es'
 import CannonDebugger from 'cannon-es-debugger'
-import { CannonUtils } from '../utils'
 
 const scene = new THREE.Scene()
 scene.add(new THREE.AxesHelper(5000))
@@ -47,31 +46,26 @@ plane.rotateX(Math.PI / 2)
 
 scene.add(plane)
 
-let rocketBody: CANNON.Body
+const rocketShape = new CANNON.Cylinder(2, 2, 40)
+const rocketBody = new CANNON.Body({ mass: 1, shape: rocketShape })
 
 const loader = new GLTFLoader()
 loader.load(
-	'models/test.glb',
+	'models/spacex_falcon_heavy.glb',
 	function (gltf) {
 		scene.add(gltf.scene)
 		rocketModel = gltf.scene.children[0] as THREE.Mesh
 		rocketModel.scale.set(0.18, 0.18, 0.18)
-		rocketModel.position.set(0.0, 60, 0)
-		gltf.scene.traverse((child) => {
-			if ((child as THREE.Mesh).geometry) {
-				const rocketShape = CannonUtils.CreateTrimesh(
-					(child as THREE.Mesh).geometry
-				)
-				console.log(rocketShape)
-				rocketModel.quaternion
-				rocketBody = new CANNON.Body({ mass: 1, shape: rocketShape })
+		rocketModel.position.set(0.0, 40, 0)
 
-				rocketBody.position.x = rocketModel.position.x
-				rocketBody.position.y = rocketModel.position.y
-				rocketBody.position.z = rocketModel.position.z
-				world.addBody(rocketBody)
-			}
-		})
+		rocketModel.quaternion
+
+		rocketModel.updateMatrix()
+
+		rocketBody.position.x = rocketModel.position.x
+		rocketBody.position.y = rocketModel.position.y
+		rocketBody.position.z = rocketModel.position.z
+		world.addBody(rocketBody)
 
 		mixer = new THREE.AnimationMixer(gltf.scene)
 		const launch = THREE.AnimationClip.findByName(gltf.animations, 'Launch')
@@ -142,7 +136,7 @@ const cannonDebugger = CannonDebugger(scene, world, {
 	color: 0xff0000,
 })
 
-function animate() {
+function logic() {
 	cannonDebugger.update()
 	const rocketStatsDiv = document.getElementById('stats')
 	if (rocketStatsDiv && rocketModel)
@@ -156,7 +150,7 @@ function animate() {
 	if (mixer) {
 		mixer.update(clock.getDelta())
 	}
-	if (rocketModel && rocketBody) {
+	if (rocketModel) {
 		rocketModel.position.set(
 			rocketBody.position.x,
 			rocketBody.position.y,
@@ -179,10 +173,21 @@ function animate() {
 	} else {
 		controls.update()
 	}
+	stats.update()
+}
+
+let deltaFps = 20
+let interval = 1 / 100
+
+function animate() {
+	if (deltaFps > interval) {
+		logic()
+
+		deltaFps = deltaFps % interval
+	}
+	deltaFps += clock.getDelta()
 	requestAnimationFrame(animate)
 	render()
-
-	stats.update()
 }
 
 function render() {
