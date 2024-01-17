@@ -12,6 +12,7 @@ scene.background = new THREE.Color(0xff0fff)
 
 const world = new CANNON.World()
 world.gravity.set(0, -9.82, 0)
+;(world.solver as CANNON.GSSolver).iterations = 5
 
 const planeShape = new CANNON.Plane()
 const planeBody = new CANNON.Body({ mass: 0 })
@@ -46,26 +47,35 @@ plane.rotateX(Math.PI / 2)
 
 scene.add(plane)
 
-const rocketShape = new CANNON.Cylinder(2, 2, 40)
-const rocketBody = new CANNON.Body({ mass: 1, shape: rocketShape })
+const rocketShape = new CANNON.Box(new CANNON.Vec3(1.5, 1.5, 26.7))
+const boosterShape = new CANNON.Box(new CANNON.Vec3(1.5, 1.5, 16.7))
+
+const rocketBody = new CANNON.Body({ mass: 1 })
+rocketBody.addShape(rocketShape, new CANNON.Vec3(0, 0, 0))
+rocketBody.addShape(boosterShape, new CANNON.Vec3(3, 0, -10))
+rocketBody.addShape(boosterShape, new CANNON.Vec3(-3, 0, -10))
 
 const loader = new GLTFLoader()
 loader.load(
-	'models/spacex_falcon_heavy.glb',
+	'models/test.glb',
 	function (gltf) {
 		scene.add(gltf.scene)
 		rocketModel = gltf.scene.children[0] as THREE.Mesh
 		rocketModel.scale.set(0.18, 0.18, 0.18)
-		rocketModel.position.set(0.0, 40, 0)
-
-		rocketModel.quaternion
+		rocketModel.position.set(0, 27.669, 0)
 
 		rocketModel.updateMatrix()
 
 		rocketBody.position.x = rocketModel.position.x
 		rocketBody.position.y = rocketModel.position.y
 		rocketBody.position.z = rocketModel.position.z
-		world.addBody(rocketBody)
+
+		rocketBody.quaternion.set(
+			rocketModel.quaternion.x,
+			rocketModel.quaternion.y,
+			rocketModel.quaternion.z,
+			rocketModel.quaternion.w
+		)
 
 		mixer = new THREE.AnimationMixer(gltf.scene)
 		const launch = THREE.AnimationClip.findByName(gltf.animations, 'Launch')
@@ -111,9 +121,10 @@ buttonsWrapper.id = 'buttons_wrapper'
 const stageOneBoostersOn = document.createElement('button')
 stageOneBoostersOn.id = 'button_1'
 stageOneBoostersOn.innerHTML = 'ON'
-stageOneBoostersOn.addEventListener('click', () =>
+stageOneBoostersOn.addEventListener('click', () => {
 	rocket.turnOnAllFirstStageBoosters()
-)
+	world.addBody(rocketBody)
+})
 
 const stageOneBoostersOff = document.createElement('button')
 stageOneBoostersOff.id = 'button_2'
@@ -132,11 +143,14 @@ document.body.appendChild(rocketStats)
 const clock = new THREE.Clock()
 let delta
 
+// let deltaFps = 0
+// let interval = 1 / 30
+
 const cannonDebugger = CannonDebugger(scene, world, {
 	color: 0xff0000,
 })
 
-function logic() {
+function animate() {
 	cannonDebugger.update()
 	const rocketStatsDiv = document.getElementById('stats')
 	if (rocketStatsDiv && rocketModel)
@@ -151,9 +165,11 @@ function logic() {
 		mixer.update(clock.getDelta())
 	}
 	if (rocketModel) {
+		const impulse = rocket.accelerate()
+		rocketBody.applyLocalImpulse(impulse)
 		rocketModel.position.set(
 			rocketBody.position.x,
-			rocketBody.position.y,
+			rocketBody.position.y ,
 			rocketBody.position.z
 		)
 		rocketModel.quaternion.set(
@@ -174,18 +190,7 @@ function logic() {
 		controls.update()
 	}
 	stats.update()
-}
 
-let deltaFps = 20
-let interval = 1 / 60
-
-function animate() {
-	deltaFps += clock.getDelta()
-	if (deltaFps > interval) {
-		logic()
-
-		deltaFps = deltaFps % interval
-	}
 	requestAnimationFrame(animate)
 	render()
 }

@@ -1,10 +1,11 @@
 import { Rocket, RocketBooster } from '../instances'
 import { gravityValue } from '../config'
+import * as CANNON from 'cannon-es'
 
 const FalconHeavyProps = {
 	weight: 1450,
 	stageFirst: {
-		booster: { fuel: 10000, power: 3 },
+		booster: { fuel: 10000, power: 0.07 },
 		maxSpeed: 10000,
 	},
 }
@@ -46,60 +47,34 @@ export class FalconHeavy extends Rocket {
 		this.stageFirst.booster_3.off()
 	}
 
-	accelerate(
-		model: THREE.Mesh<
-			THREE.BufferGeometry<THREE.NormalBufferAttributes>,
-			THREE.Material | THREE.Material[],
-			THREE.Object3DEventMap
-		>
-	) {
-		const { position } = model
-
+	accelerate() {
 		let acceleration = 0
-		let rotation = 0
+
+		let x = 0
+		let z = 0
 
 		if (this.stage === 1) {
 			const { booster_1, booster_2, booster_3 } = this.stageFirst
 
 			if (booster_2.isActive) {
 				const power = booster_1.burn()
-				acceleration += power
+				z += power
 			}
 
 			if (booster_1.isActive) {
 				const power = booster_1.burn()
-				acceleration += power
-				rotation += booster_2.isActive ? 0.00003 : 0.0001
+				z += power
+				x += booster_2.isActive ? 0.00003 : 0.0001
 			}
 
 			if (booster_3.isActive) {
 				const power = booster_1.burn()
-				acceleration += power
-				// rotation -= booster_2.isActive ? 0.00003 : 0.0001
+				z += power
+				x += booster_2.isActive ? -0.00003 : -0.0001
 			}
 		}
-		this.acceleration +=
-			this.acceleration > 0
-				? acceleration *
-				  ((FalconHeavyProps.stageFirst.maxSpeed - this.acceleration) /
-						FalconHeavyProps.stageFirst.maxSpeed)
-				: acceleration
-		this.acceleration -= gravityValue
 
-		if (position.y > 40 && rotation) {
-			this.rotation +=
-				this.rotation > 0 ? (rotation * this.rotation) / 0.01 : rotation
-			model.rotateY(this.rotation)
-		}
-
-		if (position.y < 40) {
-			position.y = 40
-			this.acceleration = 0
-		} else {
-			position.y += this.acceleration / 2000
-		}
-
-		return this.acceleration / 2000
+		return new CANNON.Vec3(x, 0, z)
 	}
 
 	disconnectBoosters() {}
