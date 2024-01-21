@@ -6,13 +6,61 @@ import { FalconHeavy } from '../rockets'
 import * as CANNON from 'cannon-es'
 import CannonDebugger from 'cannon-es-debugger'
 
+const loader = new GLTFLoader()
+
 const scene = new THREE.Scene()
 scene.add(new THREE.AxesHelper(5000))
-scene.background = new THREE.Color(0xff0fff)
+
+// new THREE.TextureLoader().load('models/Sky-058.jpg', (texture) => {
+// 	console.log(texture)
+// 	// scene.background = texture
+// })
+
+let materialArray = []
+let texture_ft = new THREE.TextureLoader().load('models/bluecloud_ft.jpg')
+let texture_bk = new THREE.TextureLoader().load('models/bluecloud_bk.jpg')
+let texture_up = new THREE.TextureLoader().load('models/bluecloud_up.jpg')
+let texture_dn = new THREE.TextureLoader().load('models/bluecloud_dn.jpg')
+let texture_rt = new THREE.TextureLoader().load('models/bluecloud_rt.jpg')
+let texture_lf = new THREE.TextureLoader().load('models/bluecloud_lf.jpg')
+
+materialArray.push(new THREE.MeshBasicMaterial({ map: texture_ft }))
+materialArray.push(new THREE.MeshBasicMaterial({ map: texture_bk }))
+materialArray.push(new THREE.MeshBasicMaterial({ map: texture_up }))
+materialArray.push(new THREE.MeshBasicMaterial({ map: texture_dn }))
+materialArray.push(new THREE.MeshBasicMaterial({ map: texture_rt }))
+materialArray.push(new THREE.MeshBasicMaterial({ map: texture_lf }))
+
+for (let i = 0; i < 6; i++) materialArray[i].side = THREE.BackSide
+let skyboxGeo = new THREE.BoxGeometry(20000, 20000, 20000)
+let skybox = new THREE.Mesh(skyboxGeo, materialArray)
+scene.add(skybox)
 
 const world = new CANNON.World()
 world.gravity.set(0, -9.82, 0)
 ;(world.solver as CANNON.GSSolver).iterations = 5
+
+const geo = new THREE.PlaneGeometry(11000, 11000, 8, 8)
+
+const plane = new THREE.Mesh(geo)
+new THREE.TextureLoader().load(
+	'models/brown_mud_leaves_01_diff_2k.jpg',
+	(texture) => {
+		texture.wrapS = texture.wrapT = THREE.RepeatWrapping
+		texture.offset.set(0, 0)
+		texture.repeat.set(1000, 1000)
+		plane.material = new THREE.MeshBasicMaterial({
+			map: texture,
+			side: THREE.DoubleSide,
+		})
+	}
+)
+
+plane.position.y = -2
+
+plane.rotateX(Math.PI / 2)
+
+scene.add(plane)
 
 const planeShape = new CANNON.Plane()
 const planeBody = new CANNON.Body({ mass: 0 })
@@ -20,13 +68,31 @@ planeBody.addShape(planeShape)
 planeBody.quaternion.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), -Math.PI / 2)
 world.addBody(planeBody)
 
+// assuming you want the texture to repeat in both directions:
+
+// how many times to repeat in each direction; the default is (1,1),
+//   which is probably why your example wasn't working
+
 scene.add(new THREE.AmbientLight('', 3))
+
+loader.load(
+	'models/launch-zone.glb',
+	function (gltf) {
+		scene.add(gltf.scene)
+	},
+	(xhr) => {
+		console.log((xhr.loaded / xhr.total) * 100 + '% loaded')
+	},
+	(error) => {
+		console.log(error)
+	}
+)
 
 const camera = new THREE.PerspectiveCamera(
 	75,
 	window.innerWidth / window.innerHeight,
 	0.1,
-	1000
+	20000
 )
 camera.position.z = 55
 camera.position.y = 42
@@ -36,17 +102,6 @@ let rocketModel: THREE.Mesh
 
 const rocket = new FalconHeavy()
 
-const geo = new THREE.PlaneGeometry(500, 500, 8, 8)
-const mat = new THREE.MeshBasicMaterial({
-	color: 0xfffff0,
-	side: THREE.DoubleSide,
-})
-const plane = new THREE.Mesh(geo, mat)
-
-plane.rotateX(Math.PI / 2)
-
-scene.add(plane)
-
 const rocketShape = new CANNON.Box(new CANNON.Vec3(1.5, 1.5, 26.7))
 const boosterShape = new CANNON.Box(new CANNON.Vec3(1.5, 1.5, 16.7))
 
@@ -55,7 +110,6 @@ rocketBody.addShape(rocketShape, new CANNON.Vec3(0, 0, 0))
 rocketBody.addShape(boosterShape, new CANNON.Vec3(3, 0, -10))
 rocketBody.addShape(boosterShape, new CANNON.Vec3(-3, 0, -10))
 
-const loader = new GLTFLoader()
 loader.load(
 	'models/test.glb',
 	function (gltf) {
@@ -169,9 +223,10 @@ function animate() {
 		rocketBody.applyLocalImpulse(impulse)
 		rocketModel.position.set(
 			rocketBody.position.x,
-			rocketBody.position.y ,
+			rocketBody.position.y,
 			rocketBody.position.z
 		)
+		camera.position.y = rocketBody.position.y
 		rocketModel.quaternion.set(
 			rocketBody.quaternion.x,
 			rocketBody.quaternion.y,
@@ -179,7 +234,7 @@ function animate() {
 			rocketBody.quaternion.w
 		)
 		// const rocketAcceleration = rocket.accelerate(rocketModel)
-		// camera.lookAt(rocketModel.getWorldPosition(controls.target))
+		camera.lookAt(rocketModel.getWorldPosition(controls.target))
 		// if (rocketAcceleration > 1 || rocketAcceleration < 1)
 		// 	camera.position.y += rocketAcceleration
 		controls.update()
