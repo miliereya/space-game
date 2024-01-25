@@ -1,1 +1,0 @@
-export const gravityValue = 5.8
