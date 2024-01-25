@@ -1,6 +1,7 @@
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
 import { RocketBooster } from '..'
 import * as CANNON from 'cannon-es'
+import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 
 // Loader
@@ -126,6 +127,8 @@ export class FalconHeavy {
 
 		this.body.applyLocalImpulse(impulse)
 
+		const prevY = this.model.position.y
+
 		this.model.position.set(
 			this.body.position.x,
 			this.body.position.y,
@@ -137,19 +140,21 @@ export class FalconHeavy {
 			this.body.quaternion.z,
 			this.body.quaternion.w
 		)
+		const currentY = this.model.position.y
+
+		return currentY - prevY
 	}
 
 	animate(camera: THREE.PerspectiveCamera, controls: OrbitControls) {
 		if (this.model) {
-			this.accelerate()
+			const yDiff = this.accelerate()
 
-			camera.position.y = this.body.position.y
+			const cameraDiff = camera.position.y + yDiff
+
+			camera.position.y = cameraDiff > 0 ? cameraDiff : 0
 			camera.lookAt(this.model.getWorldPosition(controls.target))
 
 			controls.update()
-			// direction.subVectors(camera.position, controls.target)
-			// // direction.normalize().multiplyScalar(10)
-			// camera.position.copy(direction.add(controls.target))
 		}
 	}
 

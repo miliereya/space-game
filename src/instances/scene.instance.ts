@@ -68,21 +68,26 @@ export class Scene {
 	}
 
 	addSkybox() {
-		// Skybox
-		const materialArray: THREE.MeshBasicMaterial[] = []
-
-		const texture_ft = textureLoader.load('models/sky/bluecloud_ft.jpg')
-		const texture_bk = textureLoader.load('models/sky/bluecloud_bk.jpg')
-		const texture_up = textureLoader.load('models/sky/bluecloud_up.jpg')
-		const texture_dn = textureLoader.load('models/sky/bluecloud_dn.jpg')
-		const texture_rt = textureLoader.load('models/sky/bluecloud_rt.jpg')
-		const texture_lf = textureLoader.load('models/sky/bluecloud_lf.jpg')
-		materialArray.push(new THREE.MeshBasicMaterial({ map: texture_ft }))
-		materialArray.push(new THREE.MeshBasicMaterial({ map: texture_bk }))
-		materialArray.push(new THREE.MeshBasicMaterial({ map: texture_up }))
-		materialArray.push(new THREE.MeshBasicMaterial({ map: texture_dn }))
-		materialArray.push(new THREE.MeshBasicMaterial({ map: texture_rt }))
-		materialArray.push(new THREE.MeshBasicMaterial({ map: texture_lf }))
+		const materialArray: THREE.MeshBasicMaterial[] = [
+			new THREE.MeshBasicMaterial({
+				map: textureLoader.load('models/sky/bluecloud_ft.jpg'),
+			}),
+			new THREE.MeshBasicMaterial({
+				map: textureLoader.load('models/sky/bluecloud_bk.jpg'),
+			}),
+			new THREE.MeshBasicMaterial({
+				map: textureLoader.load('models/sky/bluecloud_up.jpg'),
+			}),
+			new THREE.MeshBasicMaterial({
+				map: textureLoader.load('models/sky/bluecloud_dn.jpg'),
+			}),
+			new THREE.MeshBasicMaterial({
+				map: textureLoader.load('models/sky/bluecloud_rt.jpg'),
+			}),
+			new THREE.MeshBasicMaterial({
+				map: textureLoader.load('models/sky/bluecloud_lf.jpg'),
+			}),
+		]
 
 		for (let i = 0; i < 6; i++) materialArray[i].side = THREE.BackSide
 
