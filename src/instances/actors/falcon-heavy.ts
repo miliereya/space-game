@@ -8,7 +8,7 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 const gltfLoader = new GLTFLoader()
 
 // Props
-const totalMass = 1450
+const totalMass = 30000
 const stageFirst = {
 	booster: { fuel: 10000, power: 65.08 },
 	maxSpeed: 10000,

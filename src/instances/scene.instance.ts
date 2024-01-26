@@ -3,6 +3,7 @@ import * as CANNON from 'cannon-es'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 import { FalconHeavy } from './actors'
 import { Metrics, MetricsParams } from './metrics.instance'
+import { Clock } from './clock.instance'
 
 const textureLoader = new THREE.TextureLoader()
 
@@ -33,6 +34,7 @@ export class Scene {
 
 	// Flags
 	isRocketLaunched = false
+	isClockStarted = false
 
 	// Dev mode
 	metrics?: Metrics
@@ -180,6 +182,11 @@ export class Scene {
 	bindControlPanelEvents() {
 		document.getElementById('on')?.addEventListener('click', () => {
 			this.rocket.turnOnAllFirstStageBoosters()
+
+			if (!this.isClockStarted) {
+				this.isClockStarted = true
+				new Clock()
+			}
 			if (!this.isRocketLaunched) {
 				this.isRocketLaunched = true
 				this.CWorld.addBody(this.rocket.body)
