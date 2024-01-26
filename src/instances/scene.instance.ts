@@ -157,8 +157,8 @@ export class Scene {
 
 	setupCameras() {
 		this.camera = new THREE.PerspectiveCamera(75, this.w / this.h, 0.1, 300000)
-		this.camera.position.z = 55
-		this.camera.position.y = 42
+		this.camera.position.z = 600
+		this.camera.position.y = 300
 
 		this.TWorld.add(this.camera)
 	}
@@ -180,6 +180,18 @@ export class Scene {
 	}
 
 	bindControlPanelEvents() {
+		setTimeout(() => {
+			this.rocket.turnOnAllFirstStageBoosters()
+
+			if (!this.isClockStarted) {
+				this.isClockStarted = true
+				new Clock()
+			}
+			if (!this.isRocketLaunched) {
+				this.isRocketLaunched = true
+				this.CWorld.addBody(this.rocket.body)
+			}
+		}, 1200)
 		document.getElementById('on')?.addEventListener('click', () => {
 			this.rocket.turnOnAllFirstStageBoosters()
 
@@ -191,6 +203,10 @@ export class Scene {
 				this.isRocketLaunched = true
 				this.CWorld.addBody(this.rocket.body)
 			}
+		})
+
+		document.getElementById('stage2')?.addEventListener('click', () => {
+			this.rocket.goToSecondStage(this.TWorld, this.CWorld)
 		})
 
 		document

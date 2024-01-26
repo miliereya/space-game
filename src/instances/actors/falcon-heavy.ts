@@ -3,14 +3,14 @@ import { RocketBooster } from '..'
 import * as CANNON from 'cannon-es'
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
-
+const boosterShape = new CANNON.Box(new CANNON.Vec3(10.5, 80.7, 10.5))
 // Loader
 const gltfLoader = new GLTFLoader()
 
 // Props
 const totalMass = 30000
 const stageFirst = {
-	booster: { fuel: 10000, power: 1000 },
+	booster: { fuel: 10000, power: 2000 },
 	maxSpeed: 10000,
 }
 
@@ -21,6 +21,9 @@ export class FalconHeavy {
 
 	model: THREE.Mesh
 	body: CANNON.Body
+
+	booster2: THREE.Mesh
+	booster2Body: CANNON.Body
 
 	private mass = totalMass
 
@@ -45,25 +48,47 @@ export class FalconHeavy {
 	}
 
 	private setupBody() {
-		const rocketShape = new CANNON.Box(new CANNON.Vec3(1.5, 1.5, 26.7))
-		const boosterShape = new CANNON.Box(new CANNON.Vec3(1.5, 1.5, 16.7))
+		const rocketShape = new CANNON.Box(new CANNON.Vec3(10.5, 150.7, 10.5))
 
 		const body = new CANNON.Body({ mass: this.mass })
-		body.addShape(rocketShape, new CANNON.Vec3(0, 0, 0))
-		body.addShape(boosterShape, new CANNON.Vec3(3, 0, -10))
-		body.addShape(boosterShape, new CANNON.Vec3(-3, 0, -10))
+		body.addShape(rocketShape, new CANNON.Vec3(0, 50, 0))
+		body.addShape(boosterShape, new CANNON.Vec3(25, 0, 0))
+		body.addShape(boosterShape, new CANNON.Vec3(-25, 0, 0))
 
 		this.body = body
 	}
 
 	private setupModel(scene: THREE.Scene) {
 		gltfLoader.load(
-			'models/actors/falcon-heavy.glb',
+			'models/test-rocket.glb',
 			(gltf) => {
 				scene.add(gltf.scene)
 				this.model = gltf.scene.children[0] as THREE.Mesh
-				this.model.scale.set(0.18, 0.18, 0.18)
-				this.model.position.set(0, 27.669, 0)
+
+				gltfLoader.load(
+					'models/booster.glb',
+					(gltf) => {
+						const booster2 = gltf.scene.children[0] as THREE.Mesh
+						booster2.scale.set(1, 0.55, 1)
+						booster2.position.x = 0 + 2.2
+						booster2.position.y = 0
+						booster2.position.z = 0
+						this.model.add(booster2)
+						this.booster2 = booster2
+						// this.model.children.push(gltf.scene.children[1], gltf.scene.children[2])
+						// this.model.scale.set(0.18, 0.18, 0.18)
+					},
+					(xhr) => {
+						console.log((xhr.loaded / xhr.total) * 100 + '% loaded')
+					},
+					(error) => {
+						console.log(error)
+					}
+				)
+
+				// this.model.children.push(gltf.scene.children[1], gltf.scene.children[2])
+				// this.model.scale.set(0.18, 0.18, 0.18)
+				this.model.position.set(0, 115.669, 0)
 
 				this.model.updateMatrix()
 				this.body.position.x = this.model.position.x
@@ -76,6 +101,7 @@ export class FalconHeavy {
 					this.model.quaternion.z,
 					this.model.quaternion.w
 				)
+				console.log(this.model)
 			},
 			(xhr) => {
 				console.log((xhr.loaded / xhr.total) * 100 + '% loaded')
@@ -123,7 +149,7 @@ export class FalconHeavy {
 			}
 		}
 
-		const impulse = new CANNON.Vec3(x, 0, z)
+		const impulse = new CANNON.Vec3(x, z, 0)
 
 		this.body.applyLocalImpulse(impulse)
 
@@ -140,6 +166,21 @@ export class FalconHeavy {
 			this.body.quaternion.z,
 			this.body.quaternion.w
 		)
+
+		if (this.stage === 2) {
+			this.booster2.position.set(
+				this.booster2Body.position.x,
+				this.booster2Body.position.y,
+				this.booster2Body.position.z
+			)
+			this.booster2.quaternion.set(
+				this.booster2Body.quaternion.x,
+				this.booster2Body.quaternion.y,
+				this.booster2Body.quaternion.z,
+				this.booster2Body.quaternion.w
+			)
+		}
+
 		const currentY = this.model.position.y
 
 		return currentY - prevY
@@ -158,5 +199,25 @@ export class FalconHeavy {
 		}
 	}
 
-	disconnectBoosters() {}
+	goToSecondStage(scene: THREE.Scene, world: CANNON.World) {
+		if (this.stage !== 1) return
+
+		this.stage = 2
+
+		const booster = new CANNON.Body({ mass: this.mass })
+		this.booster2.removeFromParent()
+		console.log(this.body.shapes[1].body?.position)
+		booster.position.x = (this.body.shapes[1].body?.position.x as any) + 25
+		booster.position.y = this.body.shapes[1].body?.position.y as any
+		booster.position.z = this.body.shapes[1].body?.position.z as any
+		booster.addShape(boosterShape)
+		this.booster2Body = booster
+
+		this.body.removeShape(boosterShape)
+		this.body.removeShape(boosterShape)
+		world.addBody(booster)
+
+		scene.add(this.booster2)
+		this.booster2.scale.set(10, 70.55, 10)
+	}
 }
