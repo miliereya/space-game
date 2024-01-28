@@ -1,7 +1,7 @@
 import * as THREE from 'three'
 import * as CANNON from 'cannon-es'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
-import { FalconHeavy } from './actors'
+import { FalconHeavy } from '../actors'
 import { Metrics, MetricsParams } from './metrics.instance'
 import { Clock } from './clock.instance'
 
@@ -53,7 +53,6 @@ export class Scene {
 		this.bindEvents()
 
 		this.start()
-		this.animate()
 	}
 
 	setup() {
@@ -101,6 +100,7 @@ export class Scene {
 
 	start() {
 		document.body.appendChild(this.renderer.domElement)
+		this.animate()
 	}
 
 	addGround() {
@@ -180,18 +180,6 @@ export class Scene {
 	}
 
 	bindControlPanelEvents() {
-		setTimeout(() => {
-			this.rocket.turnOnAllFirstStageBoosters()
-
-			if (!this.isClockStarted) {
-				this.isClockStarted = true
-				new Clock()
-			}
-			if (!this.isRocketLaunched) {
-				this.isRocketLaunched = true
-				this.CWorld.addBody(this.rocket.body)
-			}
-		}, 1200)
 		document.getElementById('on')?.addEventListener('click', () => {
 			this.rocket.turnOnAllFirstStageBoosters()
 
@@ -206,7 +194,11 @@ export class Scene {
 		})
 
 		document.getElementById('stage2')?.addEventListener('click', () => {
-			this.rocket.goToSecondStage(this.TWorld, this.CWorld)
+			this.rocket.startSecondStage(this.CWorld)
+		})
+
+		document.getElementById('stage3')?.addEventListener('click', () => {
+			this.rocket.startThirdStage(this.CWorld)
 		})
 
 		document
@@ -228,6 +220,15 @@ export class Scene {
 		})
 	}
 
+	animateCWorld(delta: number) {
+		this.CWorld.step(delta)
+		if (this.rocket.body.position.y > 1000) {
+			this.CWorld.gravity.set(0, -5.82, 0)
+		} else {
+			this.CWorld.gravity.set(0, -9.82, 0)
+		}
+	}
+
 	animate() {
 		if (this.metrics && this.rocket.model) {
 			this.metrics.update(this.rocket.model)
@@ -235,7 +236,7 @@ export class Scene {
 
 		const delta = this.clock.getDelta()
 		this.rocket.animate(this.camera, this.controls)
-		this.CWorld.step(delta)
+		this.animateCWorld(delta)
 		this.controls.update()
 		this.render()
 
