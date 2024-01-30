@@ -11,7 +11,7 @@ const gltfLoader = new GLTFLoader()
 // Props
 const totalMass = 30000
 const stageFirst = {
-	booster: { fuel: 10000, power: 1000000 },
+	booster: { fuel: 10000, power: 10000000 },
 	maxSpeed: 10000,
 }
 

@@ -4,6 +4,7 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 import { FalconHeavy } from '../actors'
 import { Metrics, MetricsParams } from './metrics.instance'
 import { Clock } from './clock.instance'
+import { Environment } from './environment.instance'
 
 const textureLoader = new THREE.TextureLoader()
 
@@ -66,7 +67,7 @@ export class Scene {
 	}
 
 	addEnvironment() {
-		this.addSkybox()
+		// this.addSkybox()
 		// this.addGround()
 		this.addEarth()
 	}
@@ -106,40 +107,7 @@ export class Scene {
 	}
 
 	addEarth() {
-		var geometry = new THREE.SphereGeometry(100000000, 500, 500)
-		// var material = new THREE.MeshPhongMaterial()
-		const materialNormalMap = new THREE.MeshPhongMaterial({
-			specular: 0x7c7c7c,
-			shininess: 15,
-			map: textureLoader.load('textures/earth/earthmap1k.jpg'),
-			specularMap: textureLoader.load('textures/earth/earth_specular_2048.jpg'),
-			normalMap: textureLoader.load('textures/earth/earth_normal_2048.jpg'),
-
-			// y scale is negated to compensate for normal map handedness.
-			normalScale: new THREE.Vector2(0.85, -0.85),
-		})
-
-		if (materialNormalMap.map) {
-			materialNormalMap.map.colorSpace = THREE.SRGBColorSpace
-		}
-
-		var earthmesh = new THREE.Mesh(geometry, materialNormalMap)
-		earthmesh.rotation.x = Math.PI / 4
-		earthmesh.rotation.y = -50
-		earthmesh.position.y = -100000000
-		this.TWorld.add(earthmesh)
-
-		const materialClouds = new THREE.MeshLambertMaterial({
-			map: textureLoader.load('textures/earth/earth_clouds_2048.png'),
-			transparent: true,
-		})
-		if (materialClouds.map) materialClouds.map.colorSpace = THREE.SRGBColorSpace
-
-		const meshClouds = new THREE.Mesh(geometry, materialClouds)
-		meshClouds.scale.set(1.0035, 1.0035, 1.0035)
-		meshClouds.rotation.z = 0.41
-		meshClouds.position.y = -100000000
-		this.TWorld.add(meshClouds)
+		new Environment(this.TWorld)
 	}
 
 	start() {
