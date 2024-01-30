@@ -43,8 +43,9 @@ export class Scene {
 		this.updateResolution()
 
 		this.setup()
-		this.addSkybox()
-		this.addGround()
+
+		this.addEnvironment()
+
 		this.addActors()
 		if (props.metrics) {
 			this.metrics = new Metrics(this.TWorld, this.CWorld, props.metrics)
@@ -62,6 +63,12 @@ export class Scene {
 		this.setupCameras()
 		this.setupControls()
 		this.setupLights()
+	}
+
+	addEnvironment() {
+		this.addSkybox()
+		// this.addGround()
+		this.addEarth()
 	}
 
 	addActors() {
@@ -92,10 +99,47 @@ export class Scene {
 
 		for (let i = 0; i < 6; i++) materialArray[i].side = THREE.BackSide
 
-		let skyboxGeo = new THREE.BoxGeometry(300000, 300000, 300000)
+		let skyboxGeo = new THREE.BoxGeometry(30000000, 30000000, 30000000)
 		let skybox = new THREE.Mesh(skyboxGeo, materialArray)
 
 		this.TWorld.add(skybox)
+	}
+
+	addEarth() {
+		var geometry = new THREE.SphereGeometry(100000000, 500, 500)
+		// var material = new THREE.MeshPhongMaterial()
+		const materialNormalMap = new THREE.MeshPhongMaterial({
+			specular: 0x7c7c7c,
+			shininess: 15,
+			map: textureLoader.load('textures/earth/earthmap1k.jpg'),
+			specularMap: textureLoader.load('textures/earth/earth_specular_2048.jpg'),
+			normalMap: textureLoader.load('textures/earth/earth_normal_2048.jpg'),
+
+			// y scale is negated to compensate for normal map handedness.
+			normalScale: new THREE.Vector2(0.85, -0.85),
+		})
+
+		if (materialNormalMap.map) {
+			materialNormalMap.map.colorSpace = THREE.SRGBColorSpace
+		}
+
+		var earthmesh = new THREE.Mesh(geometry, materialNormalMap)
+		earthmesh.rotation.x = Math.PI / 4
+		earthmesh.rotation.y = -50
+		earthmesh.position.y = -100000000
+		this.TWorld.add(earthmesh)
+
+		const materialClouds = new THREE.MeshLambertMaterial({
+			map: textureLoader.load('textures/earth/earth_clouds_2048.png'),
+			transparent: true,
+		})
+		if (materialClouds.map) materialClouds.map.colorSpace = THREE.SRGBColorSpace
+
+		const meshClouds = new THREE.Mesh(geometry, materialClouds)
+		meshClouds.scale.set(1.0035, 1.0035, 1.0035)
+		meshClouds.rotation.z = 0.41
+		meshClouds.position.y = -100000000
+		this.TWorld.add(meshClouds)
 	}
 
 	start() {
@@ -156,7 +200,12 @@ export class Scene {
 	}
 
 	setupCameras() {
-		this.camera = new THREE.PerspectiveCamera(75, this.w / this.h, 0.1, 300000)
+		this.camera = new THREE.PerspectiveCamera(
+			75,
+			this.w / this.h,
+			0.1,
+			30000000
+		)
 		this.camera.position.z = 600
 		this.camera.position.y = 300
 
