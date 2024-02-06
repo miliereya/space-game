@@ -42,7 +42,7 @@ export class Earth {
 
 		CWorld.addBody(groundBody)
     
-		this.addClouds(TWorld)
+		// this.addClouds(TWorld)
 	}
 
 	private addClouds(TWorld: THREE.Scene) {
