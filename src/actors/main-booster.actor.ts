@@ -18,7 +18,7 @@ export class MainBooster {
 
 	model: THREE.Mesh
 	body: CANNON.Body
-	shape = new CANNON.Box(new CANNON.Vec3(10.5, 60.7, 10.5))
+	shape = new CANNON.Box(new CANNON.Vec3(10.5, 45, 10.5))
 
 	constructor(fuel: number, power: number, marginModel: number) {
 		this.marginModel = marginModel
@@ -32,7 +32,8 @@ export class MainBooster {
 			'models/booster.glb',
 			(gltf) => {
 				this.model = gltf.scene.children[0] as THREE.Mesh
-
+				this.model.castShadow = true
+				this.model.receiveShadow = true
 				this.model.scale.x = 11
 				this.model.scale.y = 60
 				this.model.scale.z = 11

@@ -11,7 +11,7 @@ const gltfLoader = new GLTFLoader()
 // Props
 const totalMass = 30000
 const stageFirst = {
-	booster: { fuel: 10000, power: 10000000 },
+	booster: { fuel: 10000, power: 100000 },
 	maxSpeed: 10000,
 }
 
@@ -48,7 +48,7 @@ export class FalconHeavy {
 	}
 
 	private setupBody() {
-		const rocketShape = new CANNON.Box(new CANNON.Vec3(10.5, 80.7, 10.5))
+		const rocketShape = new CANNON.Box(new CANNON.Vec3(10.5, 27, 10.5))
 
 		const body = new CANNON.Body({ mass: this.mass })
 		body.addShape(rocketShape, new CANNON.Vec3(0, 110.6, 0))
@@ -64,15 +64,27 @@ export class FalconHeavy {
 		gltfLoader.load(
 			'models/test-rocket.glb',
 			(gltf) => {
-				TWorld.add(gltf.scene)																									
 				this.model = gltf.scene.children[0] as THREE.Mesh
+				this.model.castShadow = true
+
+				this.model.material = new THREE.MeshBasicMaterial({
+					color: new THREE.Color(0xfff000),
+				})
+				TWorld.add(this.model)
+
+				// const box = new THREE.Mesh(new THREE.BoxGeometry(250, 10, 250))
+				// box.material = new THREE.MeshStandardMaterial({ color: 0xffffff })
+				// box.receiveShadow = true
+				// box.castShadow = false
+				// box.position.x += 20
+				// box.position.y += 5
+				// TWorld.add(box)
 
 				this.booster_1.setupModel(TWorld, -20, 0, 0)
 				this.booster_2.setupModel(TWorld, 0, 0, 0)
 				this.booster_3.setupModel(TWorld, 20, 0, 0)
 
 				this.model.position.set(0, 115.669, 0)
-
 				moveBodyToModel(this.body, this.model)
 			},
 			(xhr) => {
@@ -91,7 +103,7 @@ export class FalconHeavy {
 	}
 
 	turnOffAllFirstStageBoosters() {
-		this.booster_1.off() 
+		this.booster_1.off()
 		this.booster_2.off()
 		this.booster_3.off()
 	}
@@ -111,7 +123,7 @@ export class FalconHeavy {
 			if (this.booster_1.isActive) {
 				const power = this.booster_1.burn()
 				y += power
-				x += this.booster_2.isActive ? 0.00003 : 0.0001   
+				x += this.booster_2.isActive ? 0.00003 : 0.0001
 			}
 
 			if (this.booster_3.isActive) {
@@ -122,7 +134,7 @@ export class FalconHeavy {
 		}
 		const impulse = new CANNON.Vec3(0, y, 0)
 
-		this.body.applyLocalImpulse(impulse) 
+		this.body.applyLocalImpulse(impulse)
 
 		if (this.stage === 3) {
 			// this.body.quaternion.x += 0.0001
@@ -138,20 +150,18 @@ export class FalconHeavy {
 	}
 
 	animate(camera: THREE.PerspectiveCamera, controls: OrbitControls) {
-		if (this.model) {
-			this.booster_1.animate(this.body)
-			this.booster_2.animate(this.body)
-			this.booster_3.animate(this.body)
+		this.booster_1.animate(this.body)
+		this.booster_2.animate(this.body)
+		this.booster_3.animate(this.body)
 
-			const yDiff = this.accelerate()
+		const yDiff = this.accelerate()
 
-			const cameraDiff = camera.position.y + yDiff
+		const cameraDiff = camera.position.y + yDiff
 
-			camera.position.y = cameraDiff > 0 ? cameraDiff : 0
-			camera.lookAt(this.model.getWorldPosition(controls.target))
+		camera.position.y = cameraDiff > 0 ? cameraDiff : 0
+		camera.lookAt(this.model.getWorldPosition(controls.target))
 
-			controls.update()
-		}
+		controls.update()
 	}
 
 	startSecondStage(CWorld: CANNON.World) {
@@ -165,7 +175,7 @@ export class FalconHeavy {
 
 		this.body.removeShape(this.booster_1.shape)
 		this.body.removeShape(this.booster_3.shape)
-	}																																	
+	}
 
 	startThirdStage(CWorld: CANNON.World) {
 		if (this.stage !== 2) return
@@ -177,6 +187,6 @@ export class FalconHeavy {
 
 		this.mass -= booster_2.mass
 
-		this.body.removeShape(booster_2.shape)				
+		this.body.removeShape(booster_2.shape)
 	}
 }

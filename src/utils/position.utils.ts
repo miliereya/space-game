@@ -42,3 +42,19 @@ export function moveBodyToModel(
 		model.quaternion.w
 	)
 }
+
+export function calculateStepByPosition(
+	val: number, // 3420
+	yMin: number, // 3000
+	yMax: number, // 4000
+	valMin: number, // 0.20
+	valMax: number // 0.30
+) {
+	const yRange = yMax - yMin // 1000
+	const valRange = valMax - valMin // 0.10
+
+	const valDiff = val - yMin // 420
+	const percentage = valDiff / yRange // 0.42
+
+	return valMax - valRange * percentage
+}

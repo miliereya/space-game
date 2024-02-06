@@ -1,2 +1,5 @@
 export * from './falcon-heavy.actor'
 export * from './main-booster.actor'
+export * from './sun.actor'
+export * from './sky.actor'
+export * from './earth.actor'

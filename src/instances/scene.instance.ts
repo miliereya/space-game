@@ -6,39 +6,42 @@ import { Metrics, MetricsParams } from './metrics.instance'
 import { Clock } from './clock.instance'
 import { Environment } from './environment.instance'
 
-const textureLoader = new THREE.TextureLoader()
-
 interface SceneProps {
 	metrics?: MetricsParams | null
 }
 
 export class Scene {
 	// Resolution
-	w: number
-	h: number
+	private w: number
+	private h: number
 
 	// Worlds
-	TWorld: THREE.Scene
-	CWorld: CANNON.World
+	private TWorld: THREE.Scene
+	private CWorld: CANNON.World
 
 	// Camera
-	camera: THREE.PerspectiveCamera
-	controls: OrbitControls
+	private camera: THREE.PerspectiveCamera
+	private controls: OrbitControls
 
-	renderer: THREE.WebGLRenderer
+	// Renderer
+	private renderer: THREE.WebGLRenderer
 
 	// Actors
-	rocket: FalconHeavy
+	private rocket: FalconHeavy
+
+	// Environment
+	private environment: Environment
 
 	//Helpers
-	clock: THREE.Clock
+	private clock: THREE.Clock
+	private frame = 0
 
 	// Flags
-	isRocketLaunched = false
-	isClockStarted = false
+	private isRocketLaunched = false
+	private isClockStarted = false
 
 	// Dev mode
-	metrics?: Metrics
+	private metrics?: Metrics
 
 	constructor(props: SceneProps = {}) {
 		this.updateResolution()
@@ -48,6 +51,7 @@ export class Scene {
 		this.addEnvironment()
 
 		this.addActors()
+
 		if (props.metrics) {
 			this.metrics = new Metrics(this.TWorld, this.CWorld, props.metrics)
 		}
@@ -66,84 +70,17 @@ export class Scene {
 		this.setupLights()
 	}
 
-	addEnvironment() {
-		// this.addSkybox()
-		// this.addGround()
-		this.addEarth()
-	}
-
 	addActors() {
 		this.rocket = new FalconHeavy(this.TWorld)
 	}
 
-	addSkybox() {
-		const materialArray: THREE.MeshBasicMaterial[] = [
-			new THREE.MeshBasicMaterial({
-				map: textureLoader.load('models/sky/bluecloud_ft.jpg'),
-			}),
-			new THREE.MeshBasicMaterial({
-				map: textureLoader.load('models/sky/bluecloud_bk.jpg'),
-			}),
-			new THREE.MeshBasicMaterial({
-				map: textureLoader.load('models/sky/bluecloud_up.jpg'),
-			}),
-			new THREE.MeshBasicMaterial({
-				map: textureLoader.load('models/sky/bluecloud_dn.jpg'),
-			}),
-			new THREE.MeshBasicMaterial({
-				map: textureLoader.load('models/sky/bluecloud_rt.jpg'),
-			}),
-			new THREE.MeshBasicMaterial({
-				map: textureLoader.load('models/sky/bluecloud_lf.jpg'),
-			}),
-		]
-
-		for (let i = 0; i < 6; i++) materialArray[i].side = THREE.BackSide
-
-		let skyboxGeo = new THREE.BoxGeometry(30000000, 30000000, 30000000)
-		let skybox = new THREE.Mesh(skyboxGeo, materialArray)
-
-		this.TWorld.add(skybox)
-	}
-
-	addEarth() {
-		new Environment(this.TWorld)
+	addEnvironment() {
+		this.environment = new Environment(this.TWorld, this.CWorld)
 	}
 
 	start() {
 		document.body.appendChild(this.renderer.domElement)
 		this.animate()
-	}
-
-	addGround() {
-		const geo = new THREE.PlaneGeometry(300000, 300000, 8, 8)
-
-		const plane = new THREE.Mesh(geo)
-
-		textureLoader.load('models/brown_mud_leaves_01_diff_2k.jpg', (texture) => {
-			texture.wrapS = texture.wrapT = THREE.RepeatWrapping
-			texture.offset.set(0, 0)
-			texture.repeat.set(1000, 1000)
-			plane.material = new THREE.MeshBasicMaterial({
-				map: texture,
-				side: THREE.DoubleSide,
-			})
-
-			plane.position.y = -2
-
-			plane.rotateX(Math.PI / 2)
-
-			this.TWorld.add(plane)
-		})
-
-		const planeShape = new CANNON.Plane()
-		const planeBody = new CANNON.Body({ mass: 0 })
-		planeBody.addShape(planeShape)
-		planeBody.quaternion.setFromAxisAngle(
-			new CANNON.Vec3(1, 0, 0),
-			-Math.PI / 2
-		)
-		this.CWorld.addBody(planeBody)
 	}
 
 	bindEvents() {
@@ -172,7 +109,7 @@ export class Scene {
 			75,
 			this.w / this.h,
 			0.1,
-			30000000
+			180000000
 		)
 		this.camera.position.z = 600
 		this.camera.position.y = 300
@@ -181,7 +118,7 @@ export class Scene {
 	}
 
 	setupLights() {
-		this.TWorld.add(new THREE.AmbientLight('', 3))
+		// this.TWorld.add(new THREE.AmbientLight('', 3))
 	}
 
 	setupControls() {
@@ -193,6 +130,8 @@ export class Scene {
 	setupRenderer() {
 		this.renderer = new THREE.WebGLRenderer()
 		this.renderer.shadowMap.enabled = true
+
+		this.renderer.shadowMap.type = THREE.PCFSoftShadowMap
 		this.renderer.setSize(this.w, this.h)
 	}
 
@@ -250,9 +189,19 @@ export class Scene {
 		if (this.metrics && this.rocket.model) {
 			this.metrics.update(this.rocket.model)
 		}
-
+		this.frame++
 		const delta = this.clock.getDelta()
-		this.rocket.animate(this.camera, this.controls)
+
+		if (this.rocket.model) {
+			this.rocket.animate(this.camera, this.controls)
+
+			this.environment.animate(
+				this.rocket.model.position,
+				this.camera.position.y,
+				this.frame
+			)
+		}
+
 		this.animateCWorld(delta)
 		this.controls.update()
 		this.render()
