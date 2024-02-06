@@ -18,7 +18,7 @@ export class Scene {
 
 	// Worlds
 	private TWorld: THREE.Scene // THREE World (visual)
-	private Cannon: Cannon // CANNON World (physical)
+	private Cannon: Cannon // CANNON (physics)
 
 	// Camera
 	private camera: THREE.PerspectiveCamera

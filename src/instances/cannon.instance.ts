@@ -1,7 +1,7 @@
 import * as CANNON from 'cannon-es'
 
 export class Cannon {
-	world: CANNON.World
+	world: CANNON.World // Physical World
 
 	constructor() {
 		this.world = new CANNON.World()
@@ -14,10 +14,13 @@ export class Cannon {
 
 	animate(delta: number, rocketY: number) {
 		this.world.step(delta)
+
+		// Gravitation 
 		if (rocketY > 1000) {
 			this.world.gravity.set(0, -5.82, 0)
 		} else {
 			this.world.gravity.set(0, -9.82, 0)
 		}
+		
 	}
 }
