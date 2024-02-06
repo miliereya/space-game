@@ -1,3 +1,4 @@
+// Simple clock
 export class Clock {
 	minute = 0
 	second = 0

@@ -5,6 +5,7 @@ import { FalconHeavy } from '../actors'
 import { Metrics, MetricsParams } from './metrics.instance'
 import { Clock } from './clock.instance'
 import { Environment } from './environment.instance'
+import { Cannon } from './cannon.instance'
 
 interface SceneProps {
 	metrics?: MetricsParams | null
@@ -16,8 +17,8 @@ export class Scene {
 	private h: number
 
 	// Worlds
-	private TWorld: THREE.Scene
-	private CWorld: CANNON.World
+	private TWorld: THREE.Scene // THREE World (visual)
+	private Cannon: Cannon // CANNON World (physical)
 
 	// Camera
 	private camera: THREE.PerspectiveCamera
@@ -34,7 +35,7 @@ export class Scene {
 
 	//Helpers
 	private clock: THREE.Clock
-	private frame = 0
+	private frame = 0 // Frame counter
 
 	// Flags
 	private isRocketLaunched = false
@@ -48,86 +49,86 @@ export class Scene {
 
 		this.setup()
 
+		// Earth, Stars, Sun, etc.
 		this.addEnvironment()
 
 		this.addActors()
 
 		if (props.metrics) {
-			this.metrics = new Metrics(this.TWorld, this.CWorld, props.metrics)
+			this.metrics = new Metrics(this.TWorld, this.Cannon.world, props.metrics)
 		}
-
+		// Event listeners
 		this.bindEvents()
 
 		this.start()
 	}
 
-	setup() {
+	private setup() {
 		this.setupTWorld()
-		this.setupСWorld()
+
+		this.Cannon = new Cannon()
 		this.setupRenderer()
 		this.setupCameras()
 		this.setupControls()
 		this.setupLights()
 	}
 
-	addActors() {
+	private addActors() {
 		this.rocket = new FalconHeavy(this.TWorld)
 	}
 
-	addEnvironment() {
-		this.environment = new Environment(this.TWorld, this.CWorld)
+	private addEnvironment() {
+		this.environment = new Environment(this.TWorld, this.Cannon.world)
 	}
 
-	start() {
+	private start() {
 		document.body.appendChild(this.renderer.domElement)
 		this.animate()
 	}
 
-	bindEvents() {
+	private bindEvents() {
 		this.bindResizeEvent()
 		this.bindControlPanelEvents()
 	}
 
-	updateResolution() {
+	private updateResolution() {
 		this.w = window.innerWidth
 		this.h = window.innerHeight
 	}
 
-	setupTWorld() {
+	private setupTWorld() {
 		this.TWorld = new THREE.Scene()
 		this.clock = new THREE.Clock()
 	}
 
-	setupСWorld() {
-		this.CWorld = new CANNON.World()
-		this.CWorld.gravity.set(0, -9.82, 0)
-		;(this.CWorld.solver as CANNON.GSSolver).iterations = 5
-	}
-
-	setupCameras() {
+	private setupCameras() {
 		this.camera = new THREE.PerspectiveCamera(
 			75,
 			this.w / this.h,
 			0.1,
-			180000000
+			180000000 // Far
 		)
+
+		// Default position
 		this.camera.position.z = 600
 		this.camera.position.y = 300
 
 		this.TWorld.add(this.camera)
 	}
 
-	setupLights() {
+	private setupLights() {
+		// No need in Ambient??
 		// this.TWorld.add(new THREE.AmbientLight('', 3))
 	}
 
-	setupControls() {
+	// Player controls
+	private setupControls() {
 		this.controls = new OrbitControls(this.camera, this.renderer.domElement)
 		this.controls.minDistance = 30
 		this.controls.maxDistance = 300
 	}
 
-	setupRenderer() {
+	private setupRenderer() {
 		this.renderer = new THREE.WebGLRenderer()
 		this.renderer.shadowMap.enabled = true
 
@@ -135,7 +136,7 @@ export class Scene {
 		this.renderer.setSize(this.w, this.h)
 	}
 
-	bindControlPanelEvents() {
+	private bindControlPanelEvents() {
 		document.getElementById('on')?.addEventListener('click', () => {
 			this.rocket.turnOnAllFirstStageBoosters()
 
@@ -145,16 +146,16 @@ export class Scene {
 			}
 			if (!this.isRocketLaunched) {
 				this.isRocketLaunched = true
-				this.CWorld.addBody(this.rocket.body)
+				this.Cannon.world.addBody(this.rocket.body)
 			}
 		})
 
 		document.getElementById('stage2')?.addEventListener('click', () => {
-			this.rocket.startSecondStage(this.CWorld)
+			this.rocket.startSecondStage(this.Cannon.world)
 		})
 
 		document.getElementById('stage3')?.addEventListener('click', () => {
-			this.rocket.startThirdStage(this.CWorld)
+			this.rocket.startThirdStage(this.Cannon.world)
 		})
 
 		document
@@ -164,7 +165,7 @@ export class Scene {
 			)
 	}
 
-	bindResizeEvent() {
+	private bindResizeEvent() {
 		window.addEventListener('resize', () => {
 			this.updateResolution()
 
@@ -176,22 +177,15 @@ export class Scene {
 		})
 	}
 
-	animateCWorld(delta: number) {
-		this.CWorld.step(delta)
-		if (this.rocket.body.position.y > 1000) {
-			this.CWorld.gravity.set(0, -5.82, 0)
-		} else {
-			this.CWorld.gravity.set(0, -9.82, 0)
-		}
-	}
+	private animate() {
+		this.frame++
 
-	animate() {
 		if (this.metrics && this.rocket.model) {
 			this.metrics.update(this.rocket.model)
 		}
-		this.frame++
 		const delta = this.clock.getDelta()
 
+		// Change to flag "isGameLoaded"
 		if (this.rocket.model) {
 			this.rocket.animate(this.camera, this.controls)
 
@@ -200,16 +194,16 @@ export class Scene {
 				this.camera.position.y,
 				this.frame
 			)
+			this.Cannon.animate(delta, this.rocket.getY())
 		}
 
-		this.animateCWorld(delta)
 		this.controls.update()
 		this.render()
 
 		requestAnimationFrame(() => this.animate())
 	}
 
-	render() {
+	private render() {
 		this.renderer.render(this.TWorld, this.camera)
 	}
 }

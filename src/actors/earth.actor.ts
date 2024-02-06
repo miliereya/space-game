@@ -8,6 +8,7 @@ const textureLoader = new THREE.TextureLoader()
 
 export class Earth {
 	constructor(TWorld: THREE.Scene, CWorld: CANNON.World) {
+		// Earth model
 		const materialNormalMap = new THREE.MeshPhongMaterial({
 			shininess: 15,
 			map: textureLoader.load('textures/earth/8081_earthmap10k.jpg'),
@@ -42,7 +43,7 @@ export class Earth {
 
 		CWorld.addBody(groundBody)
     
-		// this.addClouds(TWorld)
+		// this.addClouds(TWorld) // Artifacts creator :(
 	}
 
 	private addClouds(TWorld: THREE.Scene) {

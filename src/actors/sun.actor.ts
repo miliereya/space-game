@@ -42,6 +42,8 @@ export class Sun {
 
 		TWorld.add(sunLightShadows)
 		TWorld.add(sunLight)
+
+		// Helpers
 		// TWorld.add(new THREE.PointLightHelper(sunLightShadows, 100))
 		// TWorld.add(new THREE.PointLightHelper(sunLight, 3000000))
 	}

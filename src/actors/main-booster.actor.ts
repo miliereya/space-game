@@ -6,25 +6,25 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
 const gltfLoader = new GLTFLoader()
 
 export class MainBooster {
-	private power: number
+	// Properties
+	mass = 8000
+	private fuelMax = 10000
+	private power = 30000
 	private marginModel: number
+	private fuel: number
 
+	// Booleans
 	isConnected = true
 	isActive = false
 
-	mass = 8000
-	fuel: number
-	fuelMax: number
 
 	model: THREE.Mesh
 	body: CANNON.Body
 	shape = new CANNON.Box(new CANNON.Vec3(10.5, 45, 10.5))
 
-	constructor(fuel: number, power: number, marginModel: number) {
+	constructor(marginModel: number) {
 		this.marginModel = marginModel
-		this.fuel = fuel
-		this.fuelMax = fuel
-		this.power = power
+		this.fuel = this.fuelMax
 	}
 
 	setupModel(TWorld: THREE.Scene, x: number, y: number, z: number) {
@@ -63,11 +63,11 @@ export class MainBooster {
 		}
 	}
 
-	animateConnected(body: CANNON.Body) {
+	private animateConnected(body: CANNON.Body) {
 		moveModelToBody(this.model, body, this.marginModel, -50)
 	}
 
-	animateDisconnected() {
+	private animateDisconnected() {
 		moveModelToBody(this.model, this.body)
 	}
 
@@ -80,6 +80,7 @@ export class MainBooster {
 		this.body.addShape(this.shape)
 		CWorld.addBody(this.body)
 
+		// Push booster from rocket in chosen direction when disconnecting
 		if (xImpulse || yImpulse || zImpulse) {
 			this.body.applyLocalImpulse(new CANNON.Vec3(xImpulse, yImpulse, zImpulse))
 			setTimeout(() => {
@@ -105,6 +106,7 @@ export class MainBooster {
 		}
 	}
 
+	// Burn by frame
 	burn(): number {
 		if (this.fuel) {
 			this.fuel -= 1

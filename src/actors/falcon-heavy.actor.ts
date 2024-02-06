@@ -10,12 +10,8 @@ const gltfLoader = new GLTFLoader()
 
 // Props
 const totalMass = 30000
-const stageFirst = {
-	booster: { fuel: 10000, power: 100000 },
-	maxSpeed: 10000,
-}
 
-type FalconStage = 1 | 2 | 3 | 4
+type FalconStage = 1 | 2 | 3 | 4 | 5
 
 export class FalconHeavy {
 	stage: FalconStage = 1
@@ -24,23 +20,9 @@ export class FalconHeavy {
 
 	private mass = totalMass
 
-	private booster_1 = new MainBooster(
-		stageFirst.booster.fuel,
-		stageFirst.booster.power,
-		25
-	)
-
-	private booster_2 = new MainBooster(
-		stageFirst.booster.fuel,
-		stageFirst.booster.power,
-		0
-	)
-
-	private booster_3 = new MainBooster(
-		stageFirst.booster.fuel,
-		stageFirst.booster.power,
-		-25
-	)
+	private mainBooster1 = new MainBooster(25)
+	private mainBooster2 = new MainBooster(0)
+	private mainBooster3 = new MainBooster(-25)
 
 	constructor(TWorld: THREE.Scene) {
 		this.setupBody()
@@ -49,13 +31,13 @@ export class FalconHeavy {
 
 	private setupBody() {
 		const rocketShape = new CANNON.Box(new CANNON.Vec3(10.5, 27, 10.5))
-
 		const body = new CANNON.Body({ mass: this.mass })
+
 		body.addShape(rocketShape, new CANNON.Vec3(0, 110.6, 0))
 
-		body.addShape(this.booster_1.shape, new CANNON.Vec3(25, -49.4, 0))
-		body.addShape(this.booster_2.shape, new CANNON.Vec3(0, -49.4, 0))
-		body.addShape(this.booster_3.shape, new CANNON.Vec3(-25, -49.4, 0))
+		body.addShape(this.mainBooster1.shape, new CANNON.Vec3(25, -49.4, 0))
+		body.addShape(this.mainBooster2.shape, new CANNON.Vec3(0, -49.4, 0))
+		body.addShape(this.mainBooster3.shape, new CANNON.Vec3(-25, -49.4, 0))
 
 		this.body = body
 	}
@@ -72,17 +54,9 @@ export class FalconHeavy {
 				})
 				TWorld.add(this.model)
 
-				// const box = new THREE.Mesh(new THREE.BoxGeometry(250, 10, 250))
-				// box.material = new THREE.MeshStandardMaterial({ color: 0xffffff })
-				// box.receiveShadow = true
-				// box.castShadow = false
-				// box.position.x += 20
-				// box.position.y += 5
-				// TWorld.add(box)
-
-				this.booster_1.setupModel(TWorld, -20, 0, 0)
-				this.booster_2.setupModel(TWorld, 0, 0, 0)
-				this.booster_3.setupModel(TWorld, 20, 0, 0)
+				this.mainBooster1.setupModel(TWorld, -20, 0, 0)
+				this.mainBooster2.setupModel(TWorld, 0, 0, 0)
+				this.mainBooster3.setupModel(TWorld, 20, 0, 0)
 
 				this.model.position.set(0, 115.669, 0)
 				moveBodyToModel(this.body, this.model)
@@ -97,39 +71,41 @@ export class FalconHeavy {
 	}
 
 	turnOnAllFirstStageBoosters() {
-		this.booster_1.on()
-		this.booster_2.on()
-		this.booster_3.on()
+		this.mainBooster1.on()
+		this.mainBooster2.on()
+		this.mainBooster3.on()
 	}
 
 	turnOffAllFirstStageBoosters() {
-		this.booster_1.off()
-		this.booster_2.off()
-		this.booster_3.off()
+		this.mainBooster1.off()
+		this.mainBooster2.off()
+		this.mainBooster3.off()
 	}
 
+	// Rocket movement calculations
 	private accelerate() {
+		// Values for impulse
 		let x = 0
 		let y = 0
 
 		if (this.stage === 1 || this.stage === 2) {
-			if (this.booster_2.isActive) {
-				const power = this.booster_1.burn()
+			if (this.mainBooster2.isActive) {
+				const power = this.mainBooster1.burn()
 				y += power
 			}
 		}
 
 		if (this.stage === 1) {
-			if (this.booster_1.isActive) {
-				const power = this.booster_1.burn()
+			if (this.mainBooster1.isActive) {
+				const power = this.mainBooster1.burn()
 				y += power
-				x += this.booster_2.isActive ? 0.00003 : 0.0001
+				x += this.mainBooster2.isActive ? 0.00003 : 0.0001
 			}
 
-			if (this.booster_3.isActive) {
-				const power = this.booster_1.burn()
+			if (this.mainBooster3.isActive) {
+				const power = this.mainBooster1.burn()
 				y += power
-				x += this.booster_2.isActive ? -0.00003 : -0.0001
+				x += this.mainBooster2.isActive ? -0.00003 : -0.0001
 			}
 		}
 		const impulse = new CANNON.Vec3(0, y, 0)
@@ -137,6 +113,7 @@ export class FalconHeavy {
 		this.body.applyLocalImpulse(impulse)
 
 		if (this.stage === 3) {
+			// Rotation on 3rd stage???
 			// this.body.quaternion.x += 0.0001
 		}
 
@@ -146,18 +123,21 @@ export class FalconHeavy {
 
 		const currentY = this.model.position.y
 
-		return currentY - prevY
+		return currentY - prevY // Difference for camera position.y
+	}
+
+	getY() {
+		return this.model.position.y
 	}
 
 	animate(camera: THREE.PerspectiveCamera, controls: OrbitControls) {
-		this.booster_1.animate(this.body)
-		this.booster_2.animate(this.body)
-		this.booster_3.animate(this.body)
+		this.mainBooster1.animate(this.body)
+		this.mainBooster2.animate(this.body)
+		this.mainBooster3.animate(this.body)
 
 		const yDiff = this.accelerate()
-
 		const cameraDiff = camera.position.y + yDiff
-
+		// Camera follows rocket
 		camera.position.y = cameraDiff > 0 ? cameraDiff : 0
 		camera.lookAt(this.model.getWorldPosition(controls.target))
 
@@ -168,25 +148,25 @@ export class FalconHeavy {
 		if (this.stage !== 1) return
 		this.stage = 2
 
-		this.booster_1.disconnect(CWorld, 900000, 0, 0)
-		this.booster_3.disconnect(CWorld, -900000, 0, 0)
+		this.mainBooster1.disconnect(CWorld, 900000, 0, 0)
+		this.mainBooster3.disconnect(CWorld, -900000, 0, 0)
 
-		this.mass -= this.booster_1.mass + this.booster_3.mass
+		this.mass -= this.mainBooster1.mass + this.mainBooster3.mass
 
-		this.body.removeShape(this.booster_1.shape)
-		this.body.removeShape(this.booster_3.shape)
+		this.body.removeShape(this.mainBooster1.shape)
+		this.body.removeShape(this.mainBooster3.shape)
 	}
 
 	startThirdStage(CWorld: CANNON.World) {
 		if (this.stage !== 2) return
 		this.stage = 3
 
-		const booster_2 = this.booster_2
+		const mainBooster2 = this.mainBooster2
 
-		booster_2.disconnect(CWorld)
+		mainBooster2.disconnect(CWorld)
 
-		this.mass -= booster_2.mass
+		this.mass -= mainBooster2.mass
 
-		this.body.removeShape(booster_2.shape)
+		this.body.removeShape(mainBooster2.shape)
 	}
 }
