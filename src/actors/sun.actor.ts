@@ -31,6 +31,8 @@ export class Sun {
 		sunLightShadows.shadow.mapSize.width = 1024
 		sunLightShadows.shadow.mapSize.height = 1024
 
+		sunLightShadows.position.set(-800, 1200, 0)
+
 		this.sunLightShadows = sunLightShadows
 
 		// Adding sun light without shadows

@@ -1,5 +1,6 @@
 import * as THREE from 'three'
 import * as CANNON from 'cannon-es'
+import { ROCKET_PROPS } from '../constants'
 
 const earthRadius = 6371000 // meters
 const sphereSegments = 500
@@ -25,7 +26,6 @@ export class Earth {
 			materialNormalMap
 		)
 		earth.receiveShadow = true
-
 		// Choose launch position
 		earth.rotation.x = Math.PI / 4
 		earth.rotation.y = -50
@@ -35,14 +35,14 @@ export class Earth {
 
 		TWorld.add(earth)
 
-        // Physical ground
+		// Physical ground
 		const groundBody = new CANNON.Body()
 
-		groundBody.addShape(new CANNON.Sphere(earthRadius + 10))
-		groundBody.position.y -= earthRadius + 10
+		groundBody.addShape(new CANNON.Sphere(earthRadius))
+		groundBody.position.y = -earthRadius-30
 
 		CWorld.addBody(groundBody)
-    
+
 		// this.addClouds(TWorld) // Artifacts creator :(
 	}
 

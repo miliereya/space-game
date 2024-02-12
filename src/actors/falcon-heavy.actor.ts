@@ -1,9 +1,11 @@
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
-import { MainBooster } from '.'
+import { MainBooster, MiniBooster } from '.'
 import * as CANNON from 'cannon-es'
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
-import { moveBodyToModel, moveModelToBody } from '../utils'
+import { moveModelToBody } from '../utils'
+
+import { RocketCapHalf } from './rocket-cap.actor'
 
 // Loader
 const gltfLoader = new GLTFLoader()
@@ -15,51 +17,54 @@ type FalconStage = 1 | 2 | 3 | 4 | 5
 
 export class FalconHeavy {
 	stage: FalconStage = 1
-	model: THREE.Mesh
+	model: THREE.Group
 	body: CANNON.Body
 
 	private mass = totalMass
 
-	private mainBooster1 = new MainBooster(25)
-	private mainBooster2 = new MainBooster(0)
-	private mainBooster3 = new MainBooster(-25)
+	private mainBooster1 = new MainBooster(1)
+	private mainBooster2 = new MainBooster(2)
+	private mainBooster3 = new MainBooster(3)
 
-	constructor(TWorld: THREE.Scene) {
-		this.setupBody()
-		this.setupModel(TWorld)
+	private miniBooster = new MiniBooster()
+
+	private capHalf1 = new RocketCapHalf('left')
+	private capHalf2 = new RocketCapHalf('right')
+
+	constructor(TWorld: THREE.Scene, CWorld: CANNON.World) {
+		this.body = new CANNON.Body({ mass: this.mass })
+		this.setupModels(TWorld, CWorld)
 	}
 
-	private setupBody() {
-		const rocketShape = new CANNON.Box(new CANNON.Vec3(10.5, 27, 10.5))
-		const body = new CANNON.Body({ mass: this.mass })
-
-		body.addShape(rocketShape, new CANNON.Vec3(0, 110.6, 0))
-
-		body.addShape(this.mainBooster1.shape, new CANNON.Vec3(25, -49.4, 0))
-		body.addShape(this.mainBooster2.shape, new CANNON.Vec3(0, -49.4, 0))
-		body.addShape(this.mainBooster3.shape, new CANNON.Vec3(-25, -49.4, 0))
-
-		this.body = body
-	}
-
-	private setupModel(TWorld: THREE.Scene) {
+	private setupModels(TWorld: THREE.Scene, CWorld: CANNON.World) {
 		gltfLoader.load(
-			'models/test-rocket.glb',
+			'models/rocket/rocket.glb',
 			(gltf) => {
-				this.model = gltf.scene.children[0] as THREE.Mesh
-				this.model.castShadow = true
+				const model = gltf.scene
+				TWorld.add(model)
 
-				this.model.material = new THREE.MeshBasicMaterial({
-					color: new THREE.Color(0xfff000),
-				})
-				TWorld.add(this.model)
+				const capHalf1 = model.getObjectByName('CapHalf1') as THREE.Mesh
+				const capHalf2 = model.getObjectByName('CapHalf2') as THREE.Mesh
 
-				this.mainBooster1.setupModel(TWorld, -20, 0, 0)
-				this.mainBooster2.setupModel(TWorld, 0, 0, 0)
-				this.mainBooster3.setupModel(TWorld, 20, 0, 0)
+				const miniBooster = model.getObjectByName('MiniBooster') as THREE.Mesh
 
-				this.model.position.set(0, 115.669, 0)
-				moveBodyToModel(this.body, this.model)
+				const mainBooster1 = model.getObjectByName('MainBooster1') as THREE.Mesh
+				const mainBooster2 = model.getObjectByName('MainBooster2') as THREE.Mesh
+				const mainBooster3 = model.getObjectByName('MainBooster3') as THREE.Mesh
+
+				const body = new CANNON.Body({ mass: 30000 })
+
+				this.capHalf1.addModel(capHalf1, body)
+				this.capHalf2.addModel(capHalf2, body)
+
+				this.miniBooster.addModel(miniBooster, body)
+
+				this.mainBooster1.addModel(mainBooster1, body)
+				this.mainBooster2.addModel(mainBooster2, body)
+				this.mainBooster3.addModel(mainBooster3, body)
+
+				this.body = body
+				this.model = gltf.scene
 			},
 			(xhr) => {
 				console.log((xhr.loaded / xhr.total) * 100 + '% loaded')
@@ -95,6 +100,7 @@ export class FalconHeavy {
 			}
 		}
 
+		// this.body.quaternion.x += 0.0003
 		if (this.stage === 1) {
 			if (this.mainBooster1.isActive) {
 				const power = this.mainBooster1.burn()
@@ -108,22 +114,36 @@ export class FalconHeavy {
 				x += this.mainBooster2.isActive ? -0.00003 : -0.0001
 			}
 		}
+
+		if (this.stage === 3) {
+			const power = this.miniBooster.burn()
+			y += power
+		}
+
+		if (this.stage === 4) {
+			this.capHalf1.animate()
+			this.capHalf2.animate()
+		}
+
 		const impulse = new CANNON.Vec3(0, y, 0)
 
 		this.body.applyLocalImpulse(impulse)
 
-		if (this.stage === 3) {
-			// Rotation on 3rd stage???
-			// this.body.quaternion.x += 0.0001
-		}
-
+		const prevX = this.model.position.x
 		const prevY = this.model.position.y
+		const prevZ = this.model.position.z
 
-		moveModelToBody(this.model, this.body, 0, 60)
+		moveModelToBody(this.model, this.body, 0, 0, 0)
 
+		const currentX = this.model.position.x
 		const currentY = this.model.position.y
+		const currentZ = this.model.position.z
 
-		return currentY - prevY // Difference for camera position.y
+		return {
+			xDiff: currentX - prevX,
+			yDiff: currentY - prevY,
+			zDiff: currentZ - prevZ,
+		} // Difference for camera position.y
 	}
 
 	getY() {
@@ -131,42 +151,44 @@ export class FalconHeavy {
 	}
 
 	animate(camera: THREE.PerspectiveCamera, controls: OrbitControls) {
-		this.mainBooster1.animate(this.body)
-		this.mainBooster2.animate(this.body)
-		this.mainBooster3.animate(this.body)
+		this.mainBooster1.animate()
+		this.mainBooster2.animate()
+		this.mainBooster3.animate()
 
-		const yDiff = this.accelerate()
+		const { xDiff, yDiff, zDiff } = this.accelerate()
 		const cameraDiff = camera.position.y + yDiff
+
 		// Camera follows rocket
 		camera.position.y = cameraDiff > 0 ? cameraDiff : 0
+		camera.position.x += xDiff
+		camera.position.z += zDiff
 		camera.lookAt(this.model.getWorldPosition(controls.target))
 
 		controls.update()
 	}
 
-	startSecondStage(CWorld: CANNON.World) {
+	startSecondStage(CWorld: CANNON.World, TWorld: THREE.Scene) {
 		if (this.stage !== 1) return
 		this.stage = 2
 
-		this.mainBooster1.disconnect(CWorld, 900000, 0, 0)
-		this.mainBooster3.disconnect(CWorld, -900000, 0, 0)
-
-		this.mass -= this.mainBooster1.mass + this.mainBooster3.mass
-
-		this.body.removeShape(this.mainBooster1.shape)
-		this.body.removeShape(this.mainBooster3.shape)
+		this.mainBooster1.disconnect(this.model, this.body, CWorld, TWorld)
+		this.mainBooster3.disconnect(this.model, this.body, CWorld, TWorld)
 	}
 
-	startThirdStage(CWorld: CANNON.World) {
+	startThirdStage(CWorld: CANNON.World, TWorld: THREE.Scene) {
 		if (this.stage !== 2) return
 		this.stage = 3
 
-		const mainBooster2 = this.mainBooster2
+		this.mainBooster2.disconnect(this.model, this.body, CWorld, TWorld)
 
-		mainBooster2.disconnect(CWorld)
+		this.miniBooster.on()
+	}
 
-		this.mass -= mainBooster2.mass
+	startFourthStage(CWorld: CANNON.World, TWorld: THREE.Scene) {
+		if (this.stage !== 3) return
+		this.stage = 4
 
-		this.body.removeShape(mainBooster2.shape)
+		this.capHalf1.disconnect(this.model, this.body, CWorld, TWorld)
+		this.capHalf2.disconnect(this.model, this.body, CWorld, TWorld)
 	}
 }

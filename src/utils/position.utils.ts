@@ -2,7 +2,7 @@ import * as CANNON from 'cannon-es'
 import * as THREE from 'three'
 
 export function moveModelToBody(
-	model: THREE.Mesh,
+	model: THREE.Mesh | THREE.Group,
 	body: CANNON.Body,
 	xDiff = 0,
 	yDiff = 0,
@@ -24,7 +24,7 @@ export function moveModelToBody(
 
 export function moveBodyToModel(
 	body: CANNON.Body,
-	model: THREE.Mesh,
+	model: THREE.Mesh | THREE.Group,
 	xDiff = 0,
 	yDiff = 0,
 	zDiff = 0

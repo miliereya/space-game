@@ -74,7 +74,7 @@ export class Scene {
 	}
 
 	private addActors() {
-		this.rocket = new FalconHeavy(this.TWorld)
+		this.rocket = new FalconHeavy(this.TWorld, this.Cannon.world)
 	}
 
 	private addEnvironment() {
@@ -151,11 +151,15 @@ export class Scene {
 		})
 
 		document.getElementById('stage2')?.addEventListener('click', () => {
-			this.rocket.startSecondStage(this.Cannon.world)
+			this.rocket.startSecondStage(this.Cannon.world, this.TWorld)
 		})
 
 		document.getElementById('stage3')?.addEventListener('click', () => {
-			this.rocket.startThirdStage(this.Cannon.world)
+			this.rocket.startThirdStage(this.Cannon.world, this.TWorld)
+		})
+
+		document.getElementById('stage4')?.addEventListener('click', () => {
+			this.rocket.startFourthStage(this.Cannon.world, this.TWorld)
 		})
 
 		document

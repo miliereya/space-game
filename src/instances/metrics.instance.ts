@@ -50,7 +50,7 @@ export class Metrics {
 		}
 	}
 
-	update(rocketModel: THREE.Mesh) {
+	update(rocketModel: THREE.Group) {
 		if (this.stats) {
 			this.stats.update()
 		}

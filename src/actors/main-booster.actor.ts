@@ -1,109 +1,40 @@
 import * as THREE from 'three'
 import * as CANNON from 'cannon-es'
-import { moveBodyToModel, moveModelToBody } from '../utils'
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
+import {
+	createShapeFromModel,
+	moveBodyToModel,
+	moveModelToBody,
+	pushBodyToSide,
+} from '../utils'
 
-const gltfLoader = new GLTFLoader()
+type TypePosition = 1 | 2 | 3
 
 export class MainBooster {
 	// Properties
 	mass = 8000
+
+	private position: TypePosition
 	private fuelMax = 10000
-	private power = 30000
-	private marginModel: number
+	private power = 3000
 	private fuel: number
+	private size: {
+		x: number
+		y: number
+		z: number
+	}
 
 	// Booleans
-	isConnected = true
+	private isConnected = true
 	isActive = false
-
 
 	model: THREE.Mesh
 	body: CANNON.Body
-	shape = new CANNON.Box(new CANNON.Vec3(10.5, 45, 10.5))
+	shape: CANNON.Shape
 
-	constructor(marginModel: number) {
-		this.marginModel = marginModel
+	constructor(position: TypePosition) {
 		this.fuel = this.fuelMax
-	}
-
-	setupModel(TWorld: THREE.Scene, x: number, y: number, z: number) {
-		gltfLoader.load(
-			'models/booster.glb',
-			(gltf) => {
-				this.model = gltf.scene.children[0] as THREE.Mesh
-				this.model.castShadow = true
-				this.model.receiveShadow = true
-				this.model.scale.x = 11
-				this.model.scale.y = 60
-				this.model.scale.z = 11
-
-				this.model.position.x = x
-				this.model.position.y = y
-				this.model.position.z = z
-
-				TWorld.add(this.model)
-			},
-			(xhr) => {
-				console.log((xhr.loaded / xhr.total) * 100 + '% loaded')
-			},
-			(error) => {
-				console.log(error)
-			}
-		)
-	}
-
-	animate(body: CANNON.Body) {
-		if (this.model) {
-			if (this.isConnected) {
-				this.animateConnected(body)
-			} else {
-				this.animateDisconnected()
-			}
-		}
-	}
-
-	private animateConnected(body: CANNON.Body) {
-		moveModelToBody(this.model, body, this.marginModel, -50)
-	}
-
-	private animateDisconnected() {
-		moveModelToBody(this.model, this.body)
-	}
-
-	disconnect(CWorld: CANNON.World, xImpulse = 0, yImpulse = 0, zImpulse = 0) {
-		this.isConnected = false
+		this.position = position
 		this.body = new CANNON.Body({ mass: this.mass })
-
-		moveBodyToModel(this.body, this.model)
-
-		this.body.addShape(this.shape)
-		CWorld.addBody(this.body)
-
-		// Push booster from rocket in chosen direction when disconnecting
-		if (xImpulse || yImpulse || zImpulse) {
-			this.body.applyLocalImpulse(new CANNON.Vec3(xImpulse, yImpulse, zImpulse))
-			setTimeout(() => {
-				this.body.applyLocalImpulse(
-					new CANNON.Vec3(-(xImpulse / 4), yImpulse, zImpulse)
-				)
-			}, 500)
-			setTimeout(() => {
-				this.body.applyLocalImpulse(
-					new CANNON.Vec3(-(xImpulse / 4), yImpulse, zImpulse)
-				)
-			}, 1000)
-			setTimeout(() => {
-				this.body.applyLocalImpulse(
-					new CANNON.Vec3(-(xImpulse / 4), yImpulse, zImpulse)
-				)
-			}, 1500)
-			setTimeout(() => {
-				this.body.applyLocalImpulse(
-					new CANNON.Vec3(-(xImpulse / 4), yImpulse, zImpulse)
-				)
-			}, 2000)
-		}
 	}
 
 	// Burn by frame
@@ -125,5 +56,54 @@ export class MainBooster {
 
 	off() {
 		this.isActive = false
+	}
+
+	addModel(model: THREE.Mesh, body: CANNON.Body) {
+		const { shape, size } = createShapeFromModel(model)
+		const offset = new CANNON.Vec3(
+			model.position.x,
+			model.position.y + size.y / 2,
+			model.position.z
+		)
+
+		body.addShape(shape, offset)
+
+		this.size = size
+		this.shape = shape
+		this.model = model
+	}
+
+	disconnect(
+		rocketModel: THREE.Group,
+		rocketBody: CANNON.Body,
+		CWorld: CANNON.World,
+		TWorld: THREE.Scene
+	) {
+		this.isConnected = false
+
+		this.body.addShape(this.shape, new CANNON.Vec3(0, this.size.y / 2, 0))
+
+		moveBodyToModel(this.body, rocketModel, ...this.model.position)
+
+		this.body.velocity = rocketBody.velocity.clone()
+
+		rocketBody.mass -= this.mass
+		rocketBody.removeShape(this.shape)
+		rocketModel.remove(this.model)
+
+		TWorld.add(this.model)
+		CWorld.addBody(this.body)
+
+		// Push booster from rocket in chosen direction when disconnecting
+		const xImpulse =
+			this.position === 1 ? -150000 : this.position === 3 ? 150000 : null
+
+		if (xImpulse) {
+			pushBodyToSide(this.body, 4000, 10, xImpulse)
+		}
+	}
+
+	animate() {
+		if (!this.isConnected) moveModelToBody(this.model, this.body)
 	}
 }
