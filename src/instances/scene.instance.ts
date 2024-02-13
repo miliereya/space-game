@@ -191,14 +191,14 @@ export class Scene {
 
 		// Change to flag "isGameLoaded"
 		if (this.rocket.model) {
-			this.rocket.animate(this.camera, this.controls)
+			this.rocket.animate(this.camera, this.controls, delta)
 
 			this.environment.animate(
 				this.rocket.model.position,
 				this.camera.position.y,
 				this.frame
 			)
-			this.Cannon.animate(delta, this.rocket.getY())
+			this.Cannon.animate(delta, this.rocket.getY(), this.frame)
 		}
 
 		this.controls.update()

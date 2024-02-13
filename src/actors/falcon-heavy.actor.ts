@@ -41,7 +41,7 @@ export class FalconHeavy {
 			'models/rocket/rocket.glb',
 			(gltf) => {
 				const model = gltf.scene
-				TWorld.add(model)
+				const animations = gltf.animations
 
 				const capHalf1 = model.getObjectByName('CapHalf1') as THREE.Mesh
 				const capHalf2 = model.getObjectByName('CapHalf2') as THREE.Mesh
@@ -53,9 +53,16 @@ export class FalconHeavy {
 				const mainBooster3 = model.getObjectByName('MainBooster3') as THREE.Mesh
 
 				const body = new CANNON.Body({ mass: 30000 })
-
-				this.capHalf1.addModel(capHalf1, body)
-				this.capHalf2.addModel(capHalf2, body)
+				this.capHalf1.addModel(
+					capHalf1,
+					body,
+					THREE.AnimationClip.findByName(animations, 'CapHalf1Disconnect')
+				)
+				this.capHalf2.addModel(
+					capHalf2,
+					body,
+					THREE.AnimationClip.findByName(animations, 'CapHalf2Disconnect')
+				)
 
 				this.miniBooster.addModel(miniBooster, body)
 
@@ -64,7 +71,9 @@ export class FalconHeavy {
 				this.mainBooster3.addModel(mainBooster3, body)
 
 				this.body = body
-				this.model = gltf.scene
+				this.model = model
+
+				TWorld.add(this.model)
 			},
 			(xhr) => {
 				console.log((xhr.loaded / xhr.total) * 100 + '% loaded')
@@ -120,13 +129,8 @@ export class FalconHeavy {
 			y += power
 		}
 
-		if (this.stage === 4) {
-			this.capHalf1.animate()
-			this.capHalf2.animate()
-		}
-
 		const impulse = new CANNON.Vec3(0, y, 0)
-
+		console.log(impulse)
 		this.body.applyLocalImpulse(impulse)
 
 		const prevX = this.model.position.x
@@ -150,11 +154,22 @@ export class FalconHeavy {
 		return this.model.position.y
 	}
 
-	animate(camera: THREE.PerspectiveCamera, controls: OrbitControls) {
+	animate(
+		camera: THREE.PerspectiveCamera,
+		controls: OrbitControls,
+		delta: number
+	) {
 		this.mainBooster1.animate()
 		this.mainBooster2.animate()
 		this.mainBooster3.animate()
 
+		if (this.stage === 4) {
+			this.capHalf1.animate(delta)
+			this.capHalf2.animate(delta)
+		}
+
+		this.body.applyForce(new CANNON.Vec3(0, -9.82, 0))
+		console.log(this.body.velocity.y)
 		const { xDiff, yDiff, zDiff } = this.accelerate()
 		const cameraDiff = camera.position.y + yDiff
 

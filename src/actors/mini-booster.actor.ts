@@ -11,7 +11,7 @@ export class MiniBooster {
 	mass = 4000
 
 	private fuelMax = 10000
-	private power = 3000
+	private power = 400
 	private fuel: number
 
 	// Booleans

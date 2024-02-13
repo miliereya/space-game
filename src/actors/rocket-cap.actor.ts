@@ -21,26 +21,35 @@ export class RocketCapHalf {
 
 	// Booleans
 	isConnected = true
+
+	// Modeling
 	model: THREE.Mesh
 	body: CANNON.Body
 	shape: CANNON.Shape
+
+	// Animation
+	mixer: THREE.AnimationMixer
+	animation: THREE.AnimationAction
 
 	constructor(side: TypeSide) {
 		this.side = side
 		this.body = new CANNON.Body({ mass: this.mass })
 	}
 
-	addModel(model: THREE.Mesh, body: CANNON.Body) {
+	addModel(model: THREE.Mesh, body: CANNON.Body, clip: THREE.AnimationClip) {
 		const { shape, size } = createShapeFromModel(model)
-		body.addShape(
-			shape,
-			new CANNON.Vec3(
-				model.position.x +
-					(this.side === 'left' ? -(size.x / 2 + 0.1) : size.x / 2 + 0.1),
-				model.position.y,
-				model.position.z
-			)
+		const offset = new CANNON.Vec3(
+			model.position.x + (this.side === 'left' ? -2 : 2),
+			model.position.y,
+			model.position.z
 		)
+
+		body.addShape(shape, offset)
+
+		this.mixer = new THREE.AnimationMixer(model)
+		this.animation = this.mixer.clipAction(clip)
+		this.animation.setLoop(THREE.LoopOnce, 1)
+		this.animation.clampWhenFinished = true
 
 		this.size = size
 		this.shape = shape
@@ -54,40 +63,12 @@ export class RocketCapHalf {
 		TWorld: THREE.Scene
 	) {
 		this.isConnected = false
-
-		this.body.addShape(this.shape, new CANNON.Vec3(0, 0, 0))
-
-		moveBodyToModel(
-			this.body,
-			rocketModel,
-			this.model.position.x +
-				(this.side === 'left'
-					? -(this.size.x / 2 + 0.01)
-					: this.size.x / 2 + 0.01),
-			this.model.position.y,
-			this.model.position.z
-		)
-
-		this.body.velocity = rocketBody.velocity.clone()
-
-		rocketBody.removeShape(this.shape)
-		rocketModel.remove(this.model)
-
-		TWorld.add(this.model)
-		CWorld.addBody(this.body)
-
-		// Push booster from rocket in chosen direction when disconnecting
-		const xImpulse = this.side === 'left' ? -10000 : 10000
-
-		if (xImpulse) {
-			pushBodyToSide(this.body, 2000, 10, xImpulse)
-		}
+		this.animation.play()
 	}
 
-	animate() {
+	animate(delta: number) {
 		if (!this.isConnected) {
-			moveModelToBody(this.model, this.body)
-			this.model.rotation.y = this.side === 'right' ? Math.PI / 2 : -Math.PI / 2
+			this.mixer.update(delta)
 		}
 	}
 }
