@@ -159,7 +159,7 @@ export class Scene {
 		})
 
 		document.getElementById('stage4')?.addEventListener('click', () => {
-			this.rocket.startFourthStage(this.Cannon.world, this.TWorld)
+			this.rocket.startFourthStage()
 		})
 
 		document
@@ -182,23 +182,25 @@ export class Scene {
 	}
 
 	private animate() {
-		this.frame++
+		for (let i = 0; i < 10; i++) {
+			this.frame++
 
-		if (this.metrics && this.rocket.model) {
-			this.metrics.update(this.rocket.model)
-		}
-		const delta = this.clock.getDelta()
+			if (this.metrics && this.rocket.model) {
+				this.metrics.update(this.rocket.model)
+			}
+			const delta = this.clock.getDelta()
 
-		// Change to flag "isGameLoaded"
-		if (this.rocket.model) {
-			this.rocket.animate(this.camera, this.controls, delta)
+			// Change to flag "isGameLoaded"
+			if (this.rocket.model) {
+				this.rocket.animate(this.camera, this.controls, delta)
 
-			this.environment.animate(
-				this.rocket.model.position,
-				this.camera.position.y,
-				this.frame
-			)
-			this.Cannon.animate(delta, this.rocket.getY(), this.frame)
+				this.environment.animate(
+					this.rocket.model.position,
+					this.camera.position.y,
+					this.frame
+				)
+				this.Cannon.animate(delta, this.frame)
+			}
 		}
 
 		this.controls.update()

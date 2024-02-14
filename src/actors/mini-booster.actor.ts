@@ -1,14 +1,10 @@
 import * as THREE from 'three'
 import * as CANNON from 'cannon-es'
-import {
-	createShapeFromModel,
-	moveBodyToModel,
-	moveModelToBody,
-} from '../utils'
+import { createShapeFromModel } from '../utils'
 
 export class MiniBooster {
 	// Properties
-	mass = 4000
+	mass = 5400
 
 	private fuelMax = 10000
 	private power = 400
@@ -17,13 +13,8 @@ export class MiniBooster {
 	// Booleans
 	isActive = false
 
-	model: THREE.Mesh
-	body: CANNON.Body
-	shape: CANNON.Shape
-
 	constructor() {
 		this.fuel = this.fuelMax
-		this.body = new CANNON.Body({ mass: this.mass })
 	}
 
 	// Burn by frame
@@ -56,8 +47,5 @@ export class MiniBooster {
 		)
 
 		body.addShape(shape, offset)
-
-		this.shape = shape
-		this.model = model
 	}
 }

@@ -11,8 +11,6 @@ import { RocketCapHalf } from './rocket-cap.actor'
 const gltfLoader = new GLTFLoader()
 
 // Props
-const totalMass = 30000
-
 type FalconStage = 1 | 2 | 3 | 4 | 5
 
 export class FalconHeavy {
@@ -20,7 +18,7 @@ export class FalconHeavy {
 	model: THREE.Group
 	body: CANNON.Body
 
-	private mass = totalMass
+	private mass = 0
 
 	private mainBooster1 = new MainBooster(1)
 	private mainBooster2 = new MainBooster(2)
@@ -32,7 +30,6 @@ export class FalconHeavy {
 	private capHalf2 = new RocketCapHalf('right')
 
 	constructor(TWorld: THREE.Scene, CWorld: CANNON.World) {
-		this.body = new CANNON.Body({ mass: this.mass })
 		this.setupModels(TWorld, CWorld)
 	}
 
@@ -52,7 +49,15 @@ export class FalconHeavy {
 				const mainBooster2 = model.getObjectByName('MainBooster2') as THREE.Mesh
 				const mainBooster3 = model.getObjectByName('MainBooster3') as THREE.Mesh
 
-				const body = new CANNON.Body({ mass: 30000 })
+				this.mass +=
+					this.mainBooster1.mass +
+					this.mainBooster2.mass +
+					this.mainBooster3.mass +
+					this.capHalf1.mass +
+					this.capHalf2.mass +
+					this.miniBooster.mass
+
+				const body = new CANNON.Body({ mass: this.mass })
 				this.capHalf1.addModel(
 					capHalf1,
 					body,
@@ -98,6 +103,7 @@ export class FalconHeavy {
 
 	// Rocket movement calculations
 	private accelerate() {
+		console.log(this.body.mass)
 		// Values for impulse
 		let x = 0
 		let y = 0
@@ -130,7 +136,6 @@ export class FalconHeavy {
 		}
 
 		const impulse = new CANNON.Vec3(0, y, 0)
-		console.log(impulse)
 		this.body.applyLocalImpulse(impulse)
 
 		const prevX = this.model.position.x
@@ -168,7 +173,6 @@ export class FalconHeavy {
 			this.capHalf2.animate(delta)
 		}
 
-		this.body.applyForce(new CANNON.Vec3(0, -9.82, 0))
 		console.log(this.body.velocity.y)
 		const { xDiff, yDiff, zDiff } = this.accelerate()
 		const cameraDiff = camera.position.y + yDiff
@@ -199,11 +203,11 @@ export class FalconHeavy {
 		this.miniBooster.on()
 	}
 
-	startFourthStage(CWorld: CANNON.World, TWorld: THREE.Scene) {
+	startFourthStage() {
 		if (this.stage !== 3) return
 		this.stage = 4
 
-		this.capHalf1.disconnect(this.model, this.body, CWorld, TWorld)
-		this.capHalf2.disconnect(this.model, this.body, CWorld, TWorld)
+		this.capHalf1.disconnect(this.body)
+		this.capHalf2.disconnect(this.body)
 	}
 }

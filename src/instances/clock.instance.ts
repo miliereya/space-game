@@ -5,7 +5,7 @@ export class Clock {
 
 	constructor() {
 		this.work()
-		setInterval(() => this.work(), 1000)
+		setInterval(() => this.work(), 100)
 	}
 
 	work() {

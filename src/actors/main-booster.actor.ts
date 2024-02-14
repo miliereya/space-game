@@ -14,8 +14,8 @@ export class MainBooster {
 	mass = 8000
 
 	private position: TypePosition
-	private fuelMax = 10000
-	private power = 400
+	private fuelMax = 100000
+	private power = 1000
 	private fuel: number
 	private size: {
 		x: number
@@ -84,11 +84,6 @@ export class MainBooster {
 		this.body.addShape(this.shape, new CANNON.Vec3(0, this.size.y / 2, 0))
 
 		moveBodyToModel(this.body, rocketModel, ...this.model.position)
-		// console.log(this.model.position.x)
-		// console.log(this.model.position.y)
-		// console.log(this.model.position.z)
-		// console.log(rocketModel.position)
-		// console.log(this.body.position)
 		this.body.velocity = rocketBody.velocity.clone()
 
 		rocketBody.mass -= this.mass
@@ -109,7 +104,6 @@ export class MainBooster {
 
 	animate() {
 		if (!this.isConnected) {
-			this.body.applyForce(new CANNON.Vec3(0, -9.82, 0))
 			moveModelToBody(this.model, this.body)
 		}
 	}
