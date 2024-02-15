@@ -7,7 +7,7 @@ export class Sky {
 	private blueSky: THREE.MeshBasicMaterial
 	private stars: THREE.PointsMaterial[]
 
-	constructor(TWorld: THREE.Scene) {
+	constructor(TWorld: THREE.Scene, skyLoadCallback: () => void) {
 		// Adding stars
 		const r = 300200000,
 			starsGeometry = [new THREE.BufferGeometry(), new THREE.BufferGeometry()]
@@ -102,7 +102,10 @@ export class Sky {
 
 		// Adding BlueSky
 		const skyTexture = new THREE.MeshBasicMaterial({
-			map: textureLoader.load('textures/back.png'),
+			map: textureLoader.load('textures/back.png', (texture) => {
+				skyLoadCallback()
+				return texture
+			}),
 			side: THREE.BackSide,
 			transparent: true,
 		})
@@ -169,7 +172,8 @@ export class Sky {
 	}
 
 	animate(cameraY: number, frame: number) {
-		if (frame % 3 === 0) { // Optimization
+		if (frame % 3 === 0) {
+			// Optimization
 			this.animateStars(cameraY)
 			this.animateBlueSky(cameraY)
 		}

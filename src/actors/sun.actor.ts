@@ -7,7 +7,7 @@ const modelLoader = new GLTFLoader()
 export class Sun {
 	sunLightShadows: THREE.PointLight
 
-	constructor(TWorld: THREE.Scene) {
+	constructor(TWorld: THREE.Scene, sunLoadCallback: () => void) {
 		// Adding sun model
 		modelLoader.load('textures/space/sun/scene.gltf', (gltf) => {
 			const sun = gltf.scene.children[0]
@@ -18,6 +18,7 @@ export class Sun {
 			sun.position.x = -45000000
 
 			TWorld.add(sun)
+			sunLoadCallback()
 		})
 
 		// Adding fake light with shadows

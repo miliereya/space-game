@@ -8,11 +8,18 @@ const sphereSegments = 500
 const textureLoader = new THREE.TextureLoader()
 
 export class Earth {
-	constructor(TWorld: THREE.Scene, CWorld: CANNON.World) {
+	constructor(
+		TWorld: THREE.Scene,
+		CWorld: CANNON.World,
+		earthLoadCallback: () => void
+	) {
 		// Earth model
 		const materialNormalMap = new THREE.MeshPhongMaterial({
 			shininess: 15,
-			map: textureLoader.load('textures/earth/8081_earthmap10k.jpg'),
+			map: textureLoader.load('textures/earth/8081_earthmap10k.jpg', (data) => {
+				earthLoadCallback()
+				return data
+			}),
 			specularMap: textureLoader.load('textures/earth/earth_specular_2048.jpg'),
 			normalScale: new THREE.Vector2(0.85, -0.85),
 		})
@@ -39,7 +46,7 @@ export class Earth {
 		const groundBody = new CANNON.Body()
 
 		groundBody.addShape(new CANNON.Sphere(earthRadius))
-		groundBody.position.y = -earthRadius-30
+		groundBody.position.y = -earthRadius - 30
 
 		CWorld.addBody(groundBody)
 

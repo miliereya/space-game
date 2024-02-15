@@ -15,7 +15,7 @@ export class MainBooster {
 
 	private position: TypePosition
 	private fuelMax = 100000
-	private power = 2000
+	private power = 200000
 	private fuel: number
 	private size: {
 		x: number

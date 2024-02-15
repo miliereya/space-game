@@ -29,64 +29,59 @@ export class FalconHeavy {
 	private capHalf1 = new RocketCapHalf('left')
 	private capHalf2 = new RocketCapHalf('right')
 
-	constructor(TWorld: THREE.Scene, CWorld: CANNON.World) {
-		this.setupModels(TWorld, CWorld)
+	constructor(
+		TWorld: THREE.Scene,
+		isRocketLoadedCallback: () => void
+	) {
+		this.setupModels(TWorld, isRocketLoadedCallback)
 	}
 
-	private setupModels(TWorld: THREE.Scene, CWorld: CANNON.World) {
-		gltfLoader.load(
-			'models/rocket/rocket.glb',
-			(gltf) => {
-				const model = gltf.scene
-				const animations = gltf.animations
+	private setupModels(TWorld: THREE.Scene, isRocketLoadedCallback: () => void) {
+		gltfLoader.load('models/rocket/rocket.glb', (gltf) => {
+			const model = gltf.scene
+			const animations = gltf.animations
 
-				const capHalf1 = model.getObjectByName('CapHalf1') as THREE.Mesh
-				const capHalf2 = model.getObjectByName('CapHalf2') as THREE.Mesh
+			const capHalf1 = model.getObjectByName('CapHalf1') as THREE.Mesh
+			const capHalf2 = model.getObjectByName('CapHalf2') as THREE.Mesh
 
-				const miniBooster = model.getObjectByName('MiniBooster') as THREE.Mesh
+			const miniBooster = model.getObjectByName('MiniBooster') as THREE.Mesh
 
-				const mainBooster1 = model.getObjectByName('MainBooster1') as THREE.Mesh
-				const mainBooster2 = model.getObjectByName('MainBooster2') as THREE.Mesh
-				const mainBooster3 = model.getObjectByName('MainBooster3') as THREE.Mesh
+			const mainBooster1 = model.getObjectByName('MainBooster1') as THREE.Mesh
+			const mainBooster2 = model.getObjectByName('MainBooster2') as THREE.Mesh
+			const mainBooster3 = model.getObjectByName('MainBooster3') as THREE.Mesh
 
-				this.mass +=
-					this.mainBooster1.mass +
-					this.mainBooster2.mass +
-					this.mainBooster3.mass +
-					this.capHalf1.mass +
-					this.capHalf2.mass +
-					this.miniBooster.mass
+			this.mass +=
+				this.mainBooster1.mass +
+				this.mainBooster2.mass +
+				this.mainBooster3.mass +
+				this.capHalf1.mass +
+				this.capHalf2.mass +
+				this.miniBooster.mass
 
-				const body = new CANNON.Body({ mass: this.mass })
-				this.capHalf1.addModel(
-					capHalf1,
-					body,
-					THREE.AnimationClip.findByName(animations, 'CapHalf1Disconnect')
-				)
-				this.capHalf2.addModel(
-					capHalf2,
-					body,
-					THREE.AnimationClip.findByName(animations, 'CapHalf2Disconnect')
-				)
+			const body = new CANNON.Body({ mass: this.mass })
+			this.capHalf1.addModel(
+				capHalf1,
+				body,
+				THREE.AnimationClip.findByName(animations, 'CapHalf1Disconnect')
+			)
+			this.capHalf2.addModel(
+				capHalf2,
+				body,
+				THREE.AnimationClip.findByName(animations, 'CapHalf2Disconnect')
+			)
 
-				this.miniBooster.addModel(miniBooster, body)
+			this.miniBooster.addModel(miniBooster, body)
 
-				this.mainBooster1.addModel(mainBooster1, body)
-				this.mainBooster2.addModel(mainBooster2, body)
-				this.mainBooster3.addModel(mainBooster3, body)
+			this.mainBooster1.addModel(mainBooster1, body)
+			this.mainBooster2.addModel(mainBooster2, body)
+			this.mainBooster3.addModel(mainBooster3, body)
 
-				this.body = body
-				this.model = model
+			this.body = body
+			this.model = model
 
-				TWorld.add(this.model)
-			},
-			(xhr) => {
-				console.log((xhr.loaded / xhr.total) * 100 + '% loaded')
-			},
-			(error) => {
-				console.log(error)
-			}
-		)
+			TWorld.add(this.model)
+			isRocketLoadedCallback()
+		})
 	}
 
 	turnOnAllFirstStageBoosters() {

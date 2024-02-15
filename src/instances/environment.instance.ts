@@ -7,10 +7,16 @@ export class Environment {
 	sky: Sky
 	earth: Earth
 
-	constructor(TWorld: THREE.Scene, CWorld: CANNON.World) {
-		this.earth = new Earth(TWorld, CWorld)
-		this.sun = new Sun(TWorld)
-		this.sky = new Sky(TWorld)
+	constructor(
+		TWorld: THREE.Scene,
+		CWorld: CANNON.World,
+		sunLoadCallback: () => void,
+		earthLoadCallback: () => void,
+		skyLoadCallback: () => void
+	) {
+		this.earth = new Earth(TWorld, CWorld, sunLoadCallback)
+		this.sun = new Sun(TWorld, earthLoadCallback)
+		this.sky = new Sky(TWorld, skyLoadCallback)
 	}
 
 	animate(rocketPosition: THREE.Vector3, cameraY: number, frame: number) {

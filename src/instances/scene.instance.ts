@@ -6,10 +6,18 @@ import { Metrics, MetricsParams } from './metrics.instance'
 import { Clock } from './clock.instance'
 import { Environment } from './environment.instance'
 import { Cannon } from './cannon.instance'
+import { areObjectValuesTrue } from '../utils'
 
 interface SceneProps {
 	metrics?: MetricsParams | null
 }
+
+type TypeLoadInstance =
+	| 'isRocketLoaded'
+	| 'isSunLoaded'
+	| 'isEarthLoaded'
+	| 'isSkyLoaded'
+	| 'isScriptLoaded'
 
 export class Scene {
 	// Resolution
@@ -18,7 +26,7 @@ export class Scene {
 
 	// Worlds
 	private TWorld: THREE.Scene // THREE World (visual)
-	private Cannon: Cannon // CANNON (physics)
+	private cannon: Cannon // CANNON (physics)
 
 	// Camera
 	private camera: THREE.PerspectiveCamera
@@ -36,15 +44,28 @@ export class Scene {
 	//Helpers
 	private clock: THREE.Clock
 	private frame = 0 // Frame counter
+	private speed = 1
 
 	// Flags
+	private isGameReady = false
 	private isRocketLaunched = false
 	private isClockStarted = false
+
+	// Loadings
+	private loadingStatus = {
+		isRocketLoaded: false,
+		isSunLoaded: false,
+		isEarthLoaded: false,
+		isSkyLoaded: false,
+		isScriptLoaded: false,
+	}
 
 	// Dev mode
 	private metrics?: Metrics
 
 	constructor(props: SceneProps = {}) {
+		this.loadingLoop()
+
 		this.updateResolution()
 
 		this.setup()
@@ -55,18 +76,34 @@ export class Scene {
 		this.addActors()
 
 		if (props.metrics) {
-			this.metrics = new Metrics(this.TWorld, this.Cannon.world, props.metrics)
+			this.metrics = new Metrics(this.TWorld, this.cannon.world, props.metrics)
 		}
 		// Event listeners
 		this.bindEvents()
 
-		this.start()
+		this.loadingStatus.isScriptLoaded = true
+	}
+
+	private loadingLoop() {
+		const loop = setInterval(() => {
+			if (areObjectValuesTrue(this.loadingStatus)) {
+				this.isGameReady = true
+				this.start()
+				clearInterval(loop)
+			} else {
+				console.log(this.loadingStatus)
+			}
+		}, 10)
+	}
+
+	private setLoadingStatus(model: TypeLoadInstance) {
+		this.loadingStatus[model] = true
 	}
 
 	private setup() {
 		this.setupTWorld()
 
-		this.Cannon = new Cannon()
+		this.cannon = new Cannon()
 		this.setupRenderer()
 		this.setupCameras()
 		this.setupControls()
@@ -74,11 +111,19 @@ export class Scene {
 	}
 
 	private addActors() {
-		this.rocket = new FalconHeavy(this.TWorld, this.Cannon.world)
+		this.rocket = new FalconHeavy(this.TWorld, () =>
+			this.setLoadingStatus('isRocketLoaded')
+		)
 	}
 
 	private addEnvironment() {
-		this.environment = new Environment(this.TWorld, this.Cannon.world)
+		this.environment = new Environment(
+			this.TWorld,
+			this.cannon.world,
+			() => this.setLoadingStatus('isSunLoaded'),
+			() => this.setLoadingStatus('isEarthLoaded'),
+			() => this.setLoadingStatus('isSkyLoaded')
+		)
 	}
 
 	private start() {
@@ -146,16 +191,16 @@ export class Scene {
 			}
 			if (!this.isRocketLaunched) {
 				this.isRocketLaunched = true
-				this.Cannon.world.addBody(this.rocket.body)
+				this.cannon.world.addBody(this.rocket.body)
 			}
 		})
 
 		document.getElementById('stage2')?.addEventListener('click', () => {
-			this.rocket.startSecondStage(this.Cannon.world, this.TWorld)
+			this.rocket.startSecondStage(this.cannon.world, this.TWorld)
 		})
 
 		document.getElementById('stage3')?.addEventListener('click', () => {
-			this.rocket.startThirdStage(this.Cannon.world, this.TWorld)
+			this.rocket.startThirdStage(this.cannon.world, this.TWorld)
 		})
 
 		document.getElementById('stage4')?.addEventListener('click', () => {
@@ -181,27 +226,32 @@ export class Scene {
 		})
 	}
 
+	private frameLogic() {
+		this.frame++
+
+		const delta = this.clock.getDelta()
+
+		// Change to flag "isGameLoaded"
+		if (this.rocket.model) {
+			this.rocket.animate(this.camera, this.controls, delta)
+
+			this.environment.animate(
+				this.rocket.model.position,
+				this.camera.position.y,
+				this.frame
+			)
+			this.cannon.animate(delta, this.frame)
+		}
+	}
+
 	private animate() {
 		if (this.metrics && this.rocket.model) {
 			this.metrics.update(this.rocket.model)
 		}
-		// for (let i = 0; i < 10; i++) {
-			this.frame++
 
-			const delta = this.clock.getDelta()
-
-			// Change to flag "isGameLoaded"
-			if (this.rocket.model) {
-				this.rocket.animate(this.camera, this.controls, delta)
-
-				this.environment.animate(
-					this.rocket.model.position,
-					this.camera.position.y,
-					this.frame
-				)
-				this.Cannon.animate(delta, this.frame)
-			}
-		// }
+		for (let i = 0; i < this.speed; i++) {
+			this.frameLogic()
+		}
 
 		this.controls.update()
 		this.render()
