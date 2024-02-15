@@ -182,12 +182,12 @@ export class Scene {
 	}
 
 	private animate() {
-		for (let i = 0; i < 10; i++) {
+		if (this.metrics && this.rocket.model) {
+			this.metrics.update(this.rocket.model)
+		}
+		// for (let i = 0; i < 10; i++) {
 			this.frame++
 
-			if (this.metrics && this.rocket.model) {
-				this.metrics.update(this.rocket.model)
-			}
 			const delta = this.clock.getDelta()
 
 			// Change to flag "isGameLoaded"
@@ -201,7 +201,7 @@ export class Scene {
 				)
 				this.Cannon.animate(delta, this.frame)
 			}
-		}
+		// }
 
 		this.controls.update()
 		this.render()

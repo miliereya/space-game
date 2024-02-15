@@ -21,21 +21,21 @@ export class Cannon {
 	}
 
 	private calculateForces(yPos: number, index: TypeIndexBody) {
-		if (yPos < 100000) {
+		if (yPos < 20000) {
 			this.bodiesForce[index] = -90000.8
-		} else if (yPos >= 200000 && yPos < 300000) {
+		} else if (yPos >= 20000 && yPos < 100000) {
 			this.bodiesForce[index] = calculateStepByPosition(
 				yPos,
-				200000,
-				300000,
+				20000,
+				100000,
 				-50000,
 				-90000.8
 			)
-		} else if (yPos >= 300000 && yPos < 400000) {
+		} else if (yPos >= 100000 && yPos < 200000) {
 			this.bodiesForce[index] = calculateStepByPosition(
 				yPos,
-				300000,
-				400000,
+				100000,
+				200000,
 				-0.1,
 				-50000
 			)
@@ -54,7 +54,7 @@ export class Cannon {
 
 			const yPos = body.position.y
 
-			if (frame % 100 === 0) this.calculateForces(yPos, index)
+			if (frame % 600 === 0) this.calculateForces(yPos, index)
 			console.log()
 			body.applyForce(new CANNON.Vec3(0, this.bodiesForce[index], 0))
 		}

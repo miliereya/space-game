@@ -103,7 +103,6 @@ export class FalconHeavy {
 
 	// Rocket movement calculations
 	private accelerate() {
-		console.log(this.body.mass)
 		// Values for impulse
 		let x = 0
 		let y = 0
