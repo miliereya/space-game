@@ -37,7 +37,7 @@ export class Earth {
 		earth.rotation.y = -50
 
 		// Move Earth right under rocket
-		earth.position.y = -earthRadius
+		earth.position.y = -earthRadius + 27
 
 		TWorld.add(earth)
 

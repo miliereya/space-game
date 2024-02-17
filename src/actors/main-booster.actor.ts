@@ -15,7 +15,7 @@ export class MainBooster {
 
 	private position: TypePosition
 	private fuelMax = 100000
-	private power = 200000
+	private power = 2000
 	private fuel: number
 	private size: {
 		x: number
@@ -59,13 +59,14 @@ export class MainBooster {
 	}
 
 	addModel(model: THREE.Mesh, body: CANNON.Body) {
+		model.castShadow = true
+
 		const { shape, size } = createShapeFromModel(model)
 		const offset = new CANNON.Vec3(
 			model.position.x,
 			model.position.y + size.y / 2,
 			model.position.z
 		)
-
 		body.addShape(shape, offset)
 
 		this.size = size

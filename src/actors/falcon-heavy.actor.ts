@@ -29,16 +29,14 @@ export class FalconHeavy {
 	private capHalf1 = new RocketCapHalf('left')
 	private capHalf2 = new RocketCapHalf('right')
 
-	constructor(
-		TWorld: THREE.Scene,
-		isRocketLoadedCallback: () => void
-	) {
+	constructor(TWorld: THREE.Scene, isRocketLoadedCallback: () => void) {
 		this.setupModels(TWorld, isRocketLoadedCallback)
 	}
 
 	private setupModels(TWorld: THREE.Scene, isRocketLoadedCallback: () => void) {
 		gltfLoader.load('models/rocket/rocket.glb', (gltf) => {
 			const model = gltf.scene
+			model.castShadow = true
 			const animations = gltf.animations
 
 			const capHalf1 = model.getObjectByName('CapHalf1') as THREE.Mesh
@@ -71,7 +69,7 @@ export class FalconHeavy {
 			)
 
 			this.miniBooster.addModel(miniBooster, body)
-
+			miniBooster.castShadow = true
 			this.mainBooster1.addModel(mainBooster1, body)
 			this.mainBooster2.addModel(mainBooster2, body)
 			this.mainBooster3.addModel(mainBooster3, body)

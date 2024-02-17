@@ -109,7 +109,6 @@ export class Scene {
 		this.setupRenderer()
 		this.setupCameras()
 		this.setupControls()
-		this.setupLights()
 	}
 
 	private addActors() {
@@ -163,11 +162,6 @@ export class Scene {
 		this.TWorld.add(this.camera)
 	}
 
-	private setupLights() {
-		// No need in Ambient??
-		// this.TWorld.add(new THREE.AmbientLight('', 3))
-	}
-
 	// Player controls
 	private setupControls() {
 		this.controls = new OrbitControls(this.camera, this.renderer.domElement)
@@ -176,10 +170,11 @@ export class Scene {
 	}
 
 	private setupRenderer() {
-		this.renderer = new THREE.WebGLRenderer()
+		this.renderer = new THREE.WebGLRenderer({ antialias: true })
 		this.renderer.shadowMap.enabled = true
-
 		this.renderer.shadowMap.type = THREE.PCFSoftShadowMap
+
+		this.renderer.autoClear = false
 		this.renderer.setSize(this.w, this.h)
 	}
 
@@ -248,17 +243,17 @@ export class Scene {
 		this.delta += this.clock.getDelta()
 
 		if (this.delta > FPS_LIMIT) {
-			// The draw or time dependent code are here
 			if (this.metrics && this.rocket.model) {
 				this.metrics.update(this.rocket.model)
 			}
+			// The draw or time dependent code are here
+			this.controls.update()
 
 			for (let i = 0; i < this.speed; i++) {
 				this.frameLogic(this.delta)
 			}
 
 			this.delta = this.delta % FPS_LIMIT
-			this.controls.update()
 			this.render()
 		}
 

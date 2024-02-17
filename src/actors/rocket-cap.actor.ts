@@ -21,6 +21,8 @@ export class RocketCapHalf {
 	}
 
 	addModel(model: THREE.Mesh, body: CANNON.Body, clip: THREE.AnimationClip) {
+		model.castShadow = true
+
 		const { shape } = createShapeFromModel(model)
 		const offset = new CANNON.Vec3(
 			model.position.x + (this.side === 'left' ? -2 : 2),

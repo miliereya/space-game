@@ -26,11 +26,11 @@ export class Sun {
 
 		sunLightShadows.castShadow = true
 		sunLightShadows.distance = 5000
-		sunLightShadows.intensity = 9000000
+		sunLightShadows.intensity = 6000000
 
 		sunLightShadows.shadow.camera.far = 5000
-		sunLightShadows.shadow.mapSize.width = 1024
-		sunLightShadows.shadow.mapSize.height = 1024
+		sunLightShadows.shadow.mapSize.width = 1024 * 1.5
+		sunLightShadows.shadow.mapSize.height = 1024 * 1.5
 
 		sunLightShadows.position.set(-800, 1200, 0)
 
@@ -53,8 +53,8 @@ export class Sun {
 
 	animate(rocketPosition: THREE.Vector3) {
 		this.sunLightShadows.position.set(
-			rocketPosition.x - 800,
-			rocketPosition.y + 1200,
+			rocketPosition.x - 400,
+			rocketPosition.y + 800,
 			rocketPosition.z
 		)
 	}

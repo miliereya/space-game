@@ -9,7 +9,7 @@ export class MiniBooster {
 	private fuelMax = 10000
 	private power = 3000
 	private fuel: number
-
+	private model: THREE.Mesh
 	// Booleans
 	isActive = false
 
@@ -39,13 +39,14 @@ export class MiniBooster {
 	}
 
 	addModel(model: THREE.Mesh, body: CANNON.Body) {
+		model.castShadow = true
 		const { shape, size } = createShapeFromModel(model, 0.5)
 		const offset = new CANNON.Vec3(
 			model.position.x,
 			model.position.y + size.y / 2,
 			model.position.z
 		)
-
 		body.addShape(shape, offset)
+		this.model = model
 	}
 }
