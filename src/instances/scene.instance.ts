@@ -7,6 +7,7 @@ import { Clock } from './clock.instance'
 import { Environment } from './environment.instance'
 import { Cannon } from './cannon.instance'
 import { areObjectValuesTrue } from '../utils'
+import { FPS_LIMIT } from '../constants'
 
 interface SceneProps {
 	metrics?: MetricsParams | null
@@ -42,6 +43,7 @@ export class Scene {
 	private environment: Environment
 
 	//Helpers
+	private delta = 0
 	private clock: THREE.Clock
 	private frame = 0 // Frame counter
 	private speed = 1
@@ -226,10 +228,8 @@ export class Scene {
 		})
 	}
 
-	private frameLogic() {
+	private frameLogic(delta: number) {
 		this.frame++
-
-		const delta = this.clock.getDelta()
 
 		// Change to flag "isGameLoaded"
 		if (this.rocket.model) {
@@ -245,16 +245,22 @@ export class Scene {
 	}
 
 	private animate() {
-		if (this.metrics && this.rocket.model) {
-			this.metrics.update(this.rocket.model)
-		}
+		this.delta += this.clock.getDelta()
 
-		for (let i = 0; i < this.speed; i++) {
-			this.frameLogic()
-		}
+		if (this.delta > FPS_LIMIT) {
+			// The draw or time dependent code are here
+			if (this.metrics && this.rocket.model) {
+				this.metrics.update(this.rocket.model)
+			}
 
-		this.controls.update()
-		this.render()
+			for (let i = 0; i < this.speed; i++) {
+				this.frameLogic(this.delta)
+			}
+
+			this.delta = this.delta % FPS_LIMIT
+			this.controls.update()
+			this.render()
+		}
 
 		requestAnimationFrame(() => this.animate())
 	}

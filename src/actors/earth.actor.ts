@@ -1,6 +1,5 @@
 import * as THREE from 'three'
 import * as CANNON from 'cannon-es'
-import { ROCKET_PROPS } from '../constants'
 
 const earthRadius = 6371000 // meters
 const sphereSegments = 500
