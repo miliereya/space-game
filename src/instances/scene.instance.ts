@@ -1,5 +1,4 @@
 import * as THREE from 'three'
-import * as CANNON from 'cannon-es'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 import { FalconHeavy } from '../actors'
 import { Metrics, MetricsParams } from './metrics.instance'
@@ -8,6 +7,7 @@ import { Environment } from './environment.instance'
 import { Cannon } from './cannon.instance'
 import { areObjectValuesTrue } from '../utils'
 import { FPS_LIMIT } from '../constants'
+import { Camera } from './camera.instance'
 
 interface SceneProps {
 	metrics?: MetricsParams | null
@@ -30,7 +30,7 @@ export class Scene {
 	private cannon: Cannon // CANNON (physics)
 
 	// Camera
-	private camera: THREE.PerspectiveCamera
+	private camera: Camera
 	private controls: OrbitControls
 
 	// Renderer
@@ -49,7 +49,6 @@ export class Scene {
 	private speed = 1
 
 	// Flags
-	private isGameReady = false
 	private isRocketLaunched = false
 	private isClockStarted = false
 
@@ -89,11 +88,8 @@ export class Scene {
 	private loadingLoop() {
 		const loop = setInterval(() => {
 			if (areObjectValuesTrue(this.loadingStatus)) {
-				this.isGameReady = true
 				this.start()
 				clearInterval(loop)
-			} else {
-				console.log(this.loadingStatus)
 			}
 		}, 10)
 	}
@@ -148,7 +144,7 @@ export class Scene {
 	}
 
 	private setupCameras() {
-		this.camera = new THREE.PerspectiveCamera(
+		this.camera = new Camera(
 			75,
 			this.w / this.h,
 			0.1,
@@ -192,6 +188,31 @@ export class Scene {
 			}
 		})
 
+		document.getElementById('Rocket')?.addEventListener('click', () => {
+			this.camera.follow('Rocket', this.rocket.model.position.clone())
+		})
+
+		document.getElementById('MainBooster1')?.addEventListener('click', () => {
+			this.camera.follow(
+				'MainBooster1',
+				this.rocket.mainBooster1.model.position.clone()
+			)
+		})
+
+		document.getElementById('MainBooster2')?.addEventListener('click', () => {
+			this.camera.follow(
+				'MainBooster2',
+				this.rocket.mainBooster2.model.position.clone()
+			)
+		})
+
+		document.getElementById('MainBooster3')?.addEventListener('click', () => {
+			this.camera.follow(
+				'MainBooster3',
+				this.rocket.mainBooster3.model.position.clone()
+			)
+		})
+
 		document.getElementById('stage2')?.addEventListener('click', () => {
 			this.rocket.startSecondStage(this.cannon.world, this.TWorld)
 		})
@@ -226,17 +247,20 @@ export class Scene {
 	private frameLogic(delta: number) {
 		this.frame++
 
-		// Change to flag "isGameLoaded"
-		if (this.rocket.model) {
-			this.rocket.animate(this.camera, this.controls, delta)
+		const { xDiff, yDiff, zDiff, target } = this.rocket.animate(
+			this.controls,
+			this.camera.target,
+			delta
+		)
 
-			this.environment.animate(
-				this.rocket.model.position,
-				this.camera.position.y,
-				this.frame
-			)
-			this.cannon.animate(delta, this.frame)
-		}
+		this.camera.animate(xDiff, yDiff, zDiff, target)
+
+		this.environment.animate(
+			this.rocket.model.position,
+			this.camera.position.y,
+			this.frame
+		)
+		this.cannon.animate(delta, this.frame)
 	}
 
 	private animate() {

@@ -116,16 +116,24 @@ export class Sky {
 			new THREE.SphereGeometry(20000000000000, 100, 100),
 			skyTexture
 		)
-
+		TWorld.background = new THREE.Color(0x000000)
 		TWorld.add(sky)
 	}
 
 	private animateStars(cameraY: number) {
 		// Changing stars opacity by camera position
-		if (cameraY > 30000 && cameraY < 1000000) {
+		if (cameraY <= 30000) {
+			for (let i = 0; i < this.stars.length; i++) {
+				this.stars[i].opacity = 0
+			}
+		} else if (cameraY > 30000 && cameraY < 1000000) {
 			const val = calculateStepByPosition(cameraY, 30000, 100000, 0, 1)
 			for (let i = 0; i < this.stars.length; i++) {
 				this.stars[i].opacity = 1 - val
+			}
+		} else {
+			for (let i = 0; i < this.stars.length; i++) {
+				this.stars[i].opacity = 1
 			}
 		}
 	}

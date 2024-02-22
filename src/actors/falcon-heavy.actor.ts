@@ -6,6 +6,7 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 import { moveModelToBody } from '../utils'
 
 import { RocketCapHalf } from './rocket-cap.actor'
+import { TypeCameraTarget } from '../types'
 
 // Loader
 const gltfLoader = new GLTFLoader()
@@ -20,9 +21,9 @@ export class FalconHeavy {
 
 	private mass = 0
 
-	private mainBooster1 = new MainBooster(1)
-	private mainBooster2 = new MainBooster(2)
-	private mainBooster3 = new MainBooster(3)
+	mainBooster1 = new MainBooster(1)
+	mainBooster2 = new MainBooster(2)
+	mainBooster3 = new MainBooster(3)
 
 	private miniBooster = new MiniBooster()
 
@@ -37,16 +38,6 @@ export class FalconHeavy {
 		gltfLoader.load('models/rocket/rocket.glb', (gltf) => {
 			const model = gltf.scene
 			model.castShadow = true
-			const animations = gltf.animations
-
-			const capHalf1 = model.getObjectByName('CapHalf1') as THREE.Mesh
-			const capHalf2 = model.getObjectByName('CapHalf2') as THREE.Mesh
-
-			const miniBooster = model.getObjectByName('MiniBooster') as THREE.Mesh
-
-			const mainBooster1 = model.getObjectByName('MainBooster1') as THREE.Mesh
-			const mainBooster2 = model.getObjectByName('MainBooster2') as THREE.Mesh
-			const mainBooster3 = model.getObjectByName('MainBooster3') as THREE.Mesh
 
 			this.mass +=
 				this.mainBooster1.mass +
@@ -55,6 +46,19 @@ export class FalconHeavy {
 				this.capHalf1.mass +
 				this.capHalf2.mass +
 				this.miniBooster.mass
+
+			const animations = gltf.animations
+
+			const capHalf1 = model.getObjectByName('CapHalf1') as THREE.Mesh
+			const capHalf2 = model.getObjectByName('CapHalf2') as THREE.Mesh
+
+			const miniBooster = model.getObjectByName('MiniBooster') as THREE.Mesh
+
+			const brake = model.getObjectByName('Brake') as THREE.Mesh
+
+			const mainBooster1 = model.getObjectByName('MainBooster1') as THREE.Mesh
+			const mainBooster2 = model.getObjectByName('MainBooster2') as THREE.Mesh
+			const mainBooster3 = model.getObjectByName('MainBooster3') as THREE.Mesh
 
 			const body = new CANNON.Body({ mass: this.mass })
 			this.capHalf1.addModel(
@@ -68,11 +72,36 @@ export class FalconHeavy {
 				THREE.AnimationClip.findByName(animations, 'CapHalf2Disconnect')
 			)
 
+			const brakeOnClip = THREE.AnimationClip.findByName(animations, 'BrakeOn')
+			const brakeOffClip = THREE.AnimationClip.findByName(
+				animations,
+				'BrakeOff'
+			)
+
 			this.miniBooster.addModel(miniBooster, body)
-			miniBooster.castShadow = true
-			this.mainBooster1.addModel(mainBooster1, body)
-			this.mainBooster2.addModel(mainBooster2, body)
-			this.mainBooster3.addModel(mainBooster3, body)
+			this.mainBooster1.addModel(
+				mainBooster1,
+				body,
+				brake,
+				brakeOnClip,
+				brakeOffClip
+			)
+			this.mainBooster2.addModel(
+				mainBooster2,
+				body,
+				brake,
+				brakeOnClip,
+				brakeOffClip
+			)
+			this.mainBooster3.addModel(
+				mainBooster3,
+				body,
+				brake,
+				brakeOnClip,
+				brakeOffClip
+			)
+
+			model.remove(brake)
 
 			this.body = body
 			this.model = model
@@ -152,13 +181,13 @@ export class FalconHeavy {
 	}
 
 	animate(
-		camera: THREE.PerspectiveCamera,
 		controls: OrbitControls,
+		cameraTarget: TypeCameraTarget,
 		delta: number
 	) {
-		this.mainBooster1.animate()
-		this.mainBooster2.animate()
-		this.mainBooster3.animate()
+		const mainBooster1Diff = this.mainBooster1.animate(delta)
+		const mainBooster2Diff = this.mainBooster2.animate(delta)
+		const mainBooster3Diff = this.mainBooster3.animate(delta)
 
 		if (this.stage === 4) {
 			this.capHalf1.animate(delta)
@@ -166,17 +195,33 @@ export class FalconHeavy {
 		}
 
 		console.log(this.body.velocity.y)
-		const { xDiff, yDiff, zDiff } = this.accelerate()
-		const cameraDiff = camera.position.y + yDiff
+		const rocketDiff = this.accelerate()
 
-		// Camera follows rocket
-		camera.position.y = cameraDiff > 0 ? cameraDiff : 0
-		camera.position.x += xDiff
-		camera.position.z += zDiff
-		camera.lookAt(this.model.getWorldPosition(controls.target))
-
-		controls.update()
+		switch (cameraTarget) {
+			case 'Rocket':
+				return {
+					...rocketDiff,
+					target: this.model.getWorldPosition(controls.target),
+				}
+			case 'MainBooster1':
+				return {
+					...mainBooster1Diff,
+					target: this.mainBooster1.model.getWorldPosition(controls.target),
+				}
+			case 'MainBooster2':
+				return {
+					...mainBooster2Diff,
+					target: this.mainBooster2.model.getWorldPosition(controls.target),
+				}
+			case 'MainBooster3':
+				return {
+					...mainBooster3Diff,
+					target: this.mainBooster3.model.getWorldPosition(controls.target),
+				}
+		}
 	}
+
+	// Camera follows rocket
 
 	startSecondStage(CWorld: CANNON.World, TWorld: THREE.Scene) {
 		if (this.stage !== 1) return
