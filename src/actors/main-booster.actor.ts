@@ -117,7 +117,7 @@ export class MainBooster {
 			this.position === 1 ? -150000 : this.position === 3 ? 150000 : null
 
 		if (xImpulse) {
-			pushBodyToSide(this.body, 4000, 10, xImpulse)
+			pushBodyToSide(this.body, 4000, 6, xImpulse)
 		}
 	}
 
@@ -159,7 +159,6 @@ export class MainBooster {
 	private calibrate() {
 		const destination =
 			this.position === 1 ? -200 : this.position === 3 ? 200 : 0
-
 		const roundedX = Math.round(this.body.position.x)
 		if (roundedX > destination) {
 			this.brake1.on()
@@ -170,13 +169,29 @@ export class MainBooster {
 			this.brake4.on()
 			this.body.position.x += 0.25
 		} else {
-			console.log('he')
 			this.brake1.off()
 			this.brake2.off()
 			this.brake3.off()
 			this.brake4.off()
+
 			this.body.position.x = destination
 			this.isCalibrationStarted = false
+
+			if (this.position === 2) {
+				this.brake1.on()
+				this.brake3.on()
+
+				const interval = setInterval(() => {
+					const roundedZ = Math.round(this.body.position.z)
+					if (roundedZ !== 200) {
+						this.body.position.z += 0.45
+					} else {
+						this.brake1.off()
+						this.brake3.off()
+						clearInterval(interval)
+					}
+				}, 30)
+			}
 		}
 	}
 }

@@ -7,7 +7,7 @@ export class Brake {
 	// Properties
 	private side: TypeSide
 	isAnimating = false
-	isActive = false
+	isOn = true
 
 	// Animation
 	mixer: THREE.AnimationMixer
@@ -69,35 +69,45 @@ export class Brake {
 	}
 
 	on() {
-		if (this.isAnimating && this.isActive) return
-		this.isAnimating = true
-		this.isActive = true
-		setTimeout(() => {
-			this.isAnimating = false
-		}, 0.5)
-		this.animationOff.stop()
-		this.animationOn.play()
+		if (this.isOn) return
+
+		const onAnimation = () => {
+			this.isAnimating = true
+			this.isOn = true
+			setTimeout(() => {
+				this.isAnimating = false
+			}, 0.5)
+			this.animationOn.play()
+			this.animationOff.stop()
+		}
+
+		if (this.isAnimating) {
+			setTimeout(() => {
+				onAnimation()
+			}, 1500)
+		} else {
+			onAnimation()
+		}
 	}
 
 	off() {
+		if (!this.isOn) return
+
+		const offAnimation = () => {
+			this.isAnimating = true
+			this.isOn = false
+			setTimeout(() => {
+				this.isAnimating = false
+			}, 1500)
+			this.animationOff.play()
+			this.animationOn.stop()
+		}
 		if (this.isAnimating) {
 			setTimeout(() => {
-				this.isAnimating = true
-				setTimeout(() => {
-					this.isActive = false
-					this.isAnimating = false
-				}, 0.5)
-				this.animationOn.stop()
-				this.animationOff.play()
-			}, 0.5)
+				offAnimation()
+			}, 1500)
 		} else {
-			this.isAnimating = true
-			setTimeout(() => {
-				this.isActive = false
-				this.isAnimating = false
-			}, 0.5)
-			this.animationOn.stop()
-			this.animationOff.play()
+			offAnimation()
 		}
 	}
 
