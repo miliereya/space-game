@@ -22,10 +22,13 @@ export class MainBooster {
 		y: number
 		z: number
 	}
+	private speedBeforeLanding: number
 
 	// Booleans
 	private isConnected = true
 	private isCalibrationStarted = false
+	private isReadyForLanding = false
+	private isLanding = false
 	isActive = false
 
 	// Models
@@ -133,6 +136,23 @@ export class MainBooster {
 		this.brake3.animate(delta)
 		this.brake4.animate(delta)
 
+		if (this.isReadyForLanding && this.body.position.y < 1000) {
+			this.isReadyForLanding = false
+			this.isLanding = true
+			this.speedBeforeLanding = this.body.velocity.y
+			this.body.velocity.y = -200
+			this.brake1.on()
+			this.brake2.on()
+			this.brake3.on()
+			this.brake4.on()
+		}
+
+		if (this.isLanding) {
+			if (this.body.velocity.y > 0) {
+				this.body.velocity.y -= 0.6
+			} else this.body.velocity.y += 0.6
+		}
+
 		const prevX = this.model.position.x
 		const prevY = this.model.position.y
 		const prevZ = this.model.position.z
@@ -176,6 +196,8 @@ export class MainBooster {
 
 			this.body.position.x = destination
 			this.isCalibrationStarted = false
+
+			this.isReadyForLanding = true
 
 			if (this.position === 2) {
 				this.brake1.on()
