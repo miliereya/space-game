@@ -7,6 +7,7 @@ import {
 	pushBodyToSide,
 } from '../utils'
 import { Brake } from './brake.actor'
+import { SideStep } from './side-step.actor'
 
 type TypePosition = 1 | 2 | 3
 
@@ -15,14 +16,13 @@ export class MainBooster {
 	mass = 8000
 	private position: TypePosition
 	private fuelMax = 100000
-	private power = 20000
+	private power = 2000
 	private fuel: number
 	private size: {
 		x: number
 		y: number
 		z: number
 	}
-	private speedBeforeLanding: number
 
 	// Booleans
 	private isConnected = true
@@ -40,6 +40,11 @@ export class MainBooster {
 	brake2 = new Brake(2)
 	brake3 = new Brake(3)
 	brake4 = new Brake(4)
+
+	sideStep1 = new SideStep(1)
+	sideStep2 = new SideStep(2)
+	sideStep3 = new SideStep(3)
+	sideStep4 = new SideStep(4)
 
 	constructor(position: TypePosition) {
 		this.fuel = this.fuelMax
@@ -73,7 +78,9 @@ export class MainBooster {
 		body: CANNON.Body,
 		brake: THREE.Mesh,
 		brakeOnClip: THREE.AnimationClip,
-		brakeOffClip: THREE.AnimationClip
+		brakeOffClip: THREE.AnimationClip,
+		sideStep: THREE.Mesh,
+		sideStepOn: THREE.AnimationClip
 	) {
 		model.castShadow = true
 
@@ -93,6 +100,11 @@ export class MainBooster {
 		this.brake2.addModel(brake.clone(), model, brakeOnClip, brakeOffClip)
 		this.brake3.addModel(brake.clone(), model, brakeOnClip, brakeOffClip)
 		this.brake4.addModel(brake.clone(), model, brakeOnClip, brakeOffClip)
+
+		this.sideStep1.addModel(sideStep.clone(), model, sideStepOn)
+		this.sideStep2.addModel(sideStep.clone(), model, sideStepOn)
+		this.sideStep3.addModel(sideStep.clone(), model, sideStepOn)
+		this.sideStep4.addModel(sideStep.clone(), model, sideStepOn)
 	}
 
 	disconnect(
@@ -136,21 +148,41 @@ export class MainBooster {
 		this.brake3.animate(delta)
 		this.brake4.animate(delta)
 
+		this.sideStep1.animate(delta)
+		this.sideStep2.animate(delta)
+		this.sideStep3.animate(delta)
+		this.sideStep4.animate(delta)
+
 		if (this.isReadyForLanding && this.body.position.y < 1000) {
 			this.isReadyForLanding = false
 			this.isLanding = true
-			this.speedBeforeLanding = this.body.velocity.y
 			this.body.velocity.y = -200
 			this.brake1.on()
 			this.brake2.on()
 			this.brake3.on()
 			this.brake4.on()
+
+			this.sideStep1.on()
+			this.sideStep2.on()
+			this.sideStep3.on()
+			this.sideStep4.on()
 		}
 
 		if (this.isLanding) {
 			if (this.body.velocity.y > 0) {
 				this.body.velocity.y -= 0.6
-			} else this.body.velocity.y += 0.6
+			} else {
+				this.body.velocity.y += 0.6
+			}
+
+			if(this.body.position.y < 15) {
+				setTimeout(() => {
+					this.brake1.off()
+					this.brake2.off()
+					this.brake3.off()
+					this.brake4.off()
+				}, 1000)
+			}
 		}
 
 		const prevX = this.model.position.x
@@ -206,7 +238,7 @@ export class MainBooster {
 				const interval = setInterval(() => {
 					const roundedZ = Math.round(this.body.position.z)
 					if (roundedZ !== 200) {
-						this.body.position.z += 0.45
+						this.body.position.z += 0.75
 					} else {
 						this.brake1.off()
 						this.brake3.off()

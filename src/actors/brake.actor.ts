@@ -25,7 +25,7 @@ export class Brake {
 		offClip: THREE.AnimationClip
 	) {
 		model.castShadow = true
-		const transferWorld = new THREE.Object3D()
+		const transferWorld = new THREE.Mesh()
 		transferWorld.add(model)
 		parent.add(transferWorld)
 

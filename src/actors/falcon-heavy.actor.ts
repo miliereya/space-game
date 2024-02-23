@@ -55,6 +55,7 @@ export class FalconHeavy {
 			const miniBooster = model.getObjectByName('MiniBooster') as THREE.Mesh
 
 			const brake = model.getObjectByName('Brake') as THREE.Mesh
+			const sideStep = model.getObjectByName('SideStep') as THREE.Mesh
 
 			const mainBooster1 = model.getObjectByName('MainBooster1') as THREE.Mesh
 			const mainBooster2 = model.getObjectByName('MainBooster2') as THREE.Mesh
@@ -78,27 +79,38 @@ export class FalconHeavy {
 				'BrakeOff'
 			)
 
+			const sideStepOnClip = THREE.AnimationClip.findByName(
+				animations,
+				'SideStepOn'
+			)
+
 			this.miniBooster.addModel(miniBooster, body)
 			this.mainBooster1.addModel(
 				mainBooster1,
 				body,
 				brake,
 				brakeOnClip,
-				brakeOffClip
+				brakeOffClip,
+				sideStep,
+				sideStepOnClip
 			)
 			this.mainBooster2.addModel(
 				mainBooster2,
 				body,
 				brake,
 				brakeOnClip,
-				brakeOffClip
+				brakeOffClip,
+				sideStep,
+				sideStepOnClip
 			)
 			this.mainBooster3.addModel(
 				mainBooster3,
 				body,
 				brake,
 				brakeOnClip,
-				brakeOffClip
+				brakeOffClip,
+				sideStep,
+				sideStepOnClip
 			)
 
 			model.remove(brake)
