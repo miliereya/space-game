@@ -8,6 +8,7 @@ import { Cannon } from './cannon.instance'
 import { areObjectValuesTrue } from '../utils'
 import { FPS_LIMIT } from '../constants'
 import { Camera } from './camera.instance'
+import { Base } from '../actors/base.actor'
 
 interface SceneProps {
 	metrics?: MetricsParams | null
@@ -111,6 +112,8 @@ export class Scene {
 		this.rocket = new FalconHeavy(this.TWorld, () =>
 			this.setLoadingStatus('isRocketLoaded')
 		)
+
+		new Base(this.TWorld, this.cannon.world)
 	}
 
 	private addEnvironment() {
@@ -187,6 +190,24 @@ export class Scene {
 				this.cannon.world.addBody(this.rocket.body)
 			}
 		})
+
+		document
+			.getElementById('Booster1Calibration')
+			?.addEventListener('click', () => {
+				this.rocket.mainBooster1.calibrateForLanding()
+			})
+
+		document
+			.getElementById('Booster2Calibration')
+			?.addEventListener('click', () => {
+				this.rocket.mainBooster2.calibrateForLanding()
+			})
+
+		document
+			.getElementById('Booster3Calibration')
+			?.addEventListener('click', () => {
+				this.rocket.mainBooster3.calibrateForLanding()
+			})
 
 		document.getElementById('Rocket')?.addEventListener('click', () => {
 			this.camera.follow('Rocket', this.rocket.model.position.clone())

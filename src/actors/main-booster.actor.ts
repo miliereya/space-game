@@ -13,7 +13,6 @@ type TypePosition = 1 | 2 | 3
 export class MainBooster {
 	// Properties
 	mass = 8000
-
 	private position: TypePosition
 	private fuelMax = 100000
 	private power = 20000
@@ -26,8 +25,10 @@ export class MainBooster {
 
 	// Booleans
 	private isConnected = true
+	private isCalibrationStarted = false
 	isActive = false
 
+	// Models
 	model: THREE.Mesh
 	body: CANNON.Body
 	shape: CANNON.Shape
@@ -120,6 +121,12 @@ export class MainBooster {
 		}
 	}
 
+	calibrateForLanding() {
+		this.body.velocity.x = 0
+		this.body.velocity.z = 0
+		this.isCalibrationStarted = true
+	}
+
 	animate(delta: number) {
 		this.brake1.animate(delta)
 		this.brake2.animate(delta)
@@ -129,9 +136,13 @@ export class MainBooster {
 		const prevX = this.model.position.x
 		const prevY = this.model.position.y
 		const prevZ = this.model.position.z
+		// if (this.position === 1) console.log(this.body.velocity)
 
 		if (!this.isConnected) {
 			moveModelToBody(this.model, this.body)
+			if (this.isCalibrationStarted) {
+				this.calibrate()
+			}
 		}
 
 		const currentX = this.model.position.x
@@ -143,5 +154,29 @@ export class MainBooster {
 			yDiff: currentY - prevY,
 			zDiff: currentZ - prevZ,
 		} // Difference for camera position.y
+	}
+
+	private calibrate() {
+		const destination =
+			this.position === 1 ? -200 : this.position === 3 ? 200 : 0
+
+		const roundedX = Math.round(this.body.position.x)
+		if (roundedX > destination) {
+			this.brake1.on()
+			this.brake2.on()
+			this.body.position.x -= 0.25
+		} else if (roundedX < destination) {
+			this.brake3.on()
+			this.brake4.on()
+			this.body.position.x += 0.25
+		} else {
+			console.log('he')
+			this.brake1.off()
+			this.brake2.off()
+			this.brake3.off()
+			this.brake4.off()
+			this.body.position.x = destination
+			this.isCalibrationStarted = false
+		}
 	}
 }

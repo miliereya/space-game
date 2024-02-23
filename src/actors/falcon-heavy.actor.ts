@@ -194,7 +194,7 @@ export class FalconHeavy {
 			this.capHalf2.animate(delta)
 		}
 
-		console.log(this.body.velocity.y)
+		// console.log(this.body.velocity.y)
 		const rocketDiff = this.accelerate()
 
 		switch (cameraTarget) {

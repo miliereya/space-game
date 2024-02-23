@@ -7,6 +7,7 @@ export class Brake {
 	// Properties
 	private side: TypeSide
 	isAnimating = false
+	isActive = false
 
 	// Animation
 	mixer: THREE.AnimationMixer
@@ -35,16 +36,17 @@ export class Brake {
 				transferWorld.position.z = BRAKE_POSITION.z
 				break
 			case 2:
-				transferWorld.position.x = -BRAKE_POSITION.x
-				transferWorld.position.y = BRAKE_POSITION.y
-				transferWorld.position.z = BRAKE_POSITION.z
-				transferWorld.rotation.y = Math.PI / 2
-				break
-			case 3:
 				transferWorld.position.x = BRAKE_POSITION.x
 				transferWorld.position.y = BRAKE_POSITION.y
 				transferWorld.position.z = -BRAKE_POSITION.z
 				transferWorld.rotation.y = -Math.PI / 2
+
+				break
+			case 3:
+				transferWorld.position.x = -BRAKE_POSITION.x
+				transferWorld.position.y = BRAKE_POSITION.y
+				transferWorld.position.z = BRAKE_POSITION.z
+				transferWorld.rotation.y = Math.PI / 2
 				break
 			case 4:
 				transferWorld.position.x = -BRAKE_POSITION.x
@@ -67,21 +69,36 @@ export class Brake {
 	}
 
 	on() {
-		if (this.isAnimating) return
+		if (this.isAnimating && this.isActive) return
 		this.isAnimating = true
+		this.isActive = true
 		setTimeout(() => {
 			this.isAnimating = false
 		}, 0.5)
+		this.animationOff.stop()
 		this.animationOn.play()
 	}
 
 	off() {
-		if (this.isAnimating) return
-		this.isAnimating = true
-		setTimeout(() => {
-			this.isAnimating = false
-		}, 0.5)
-		this.animationOff.play()
+		if (this.isAnimating) {
+			setTimeout(() => {
+				this.isAnimating = true
+				setTimeout(() => {
+					this.isActive = false
+					this.isAnimating = false
+				}, 0.5)
+				this.animationOn.stop()
+				this.animationOff.play()
+			}, 0.5)
+		} else {
+			this.isAnimating = true
+			setTimeout(() => {
+				this.isActive = false
+				this.isAnimating = false
+			}, 0.5)
+			this.animationOn.stop()
+			this.animationOff.play()
+		}
 	}
 
 	animate(delta: number) {

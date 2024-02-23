@@ -1,15 +1,15 @@
 import * as CANNON from 'cannon-es'
 import { calculateStepByPosition } from '../utils'
 
-type TypeIndexBody = 1 | 2 | 3 | 4
+type TypeIndexBody = 1 | 5 | 6 | 7
 
 export class Cannon {
 	world: CANNON.World // Physical World
 	private bodiesForce = {
 		1: 0,
-		2: 0,
-		3: 0,
-		4: 0,
+		5: 0,
+		6: 0,
+		7: 0,
 	}
 
 	constructor() {
@@ -50,12 +50,13 @@ export class Cannon {
 		for (let i = 0; i < bodies.length; i++) {
 			const body = bodies[i]
 			const index = body.index
-			if (!(index === 1 || index === 2 || index === 3 || index === 4)) continue
+
+			if (!(index === 1 || index === 5 || index === 6 || index === 7)) continue
 
 			const yPos = body.position.y
 
 			if (frame % 600 === 0) this.calculateForces(yPos, index)
-			console.log()
+
 			body.applyForce(new CANNON.Vec3(0, this.bodiesForce[index], 0))
 		}
 	}
