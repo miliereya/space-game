@@ -1,0 +1,12 @@
+{
+    "compilerOptions": {
+        "target": "ES6",
+        "moduleResolution": "node",
+        "strict": true,
+        "strictPropertyInitialization": false,
+        "typeRoots": [
+            "./typings"
+        ],
+    },
+    "include": ["**/*.ts", "**/*.glsl", "webpack.common.js", "webpack.dev.js"]
+}

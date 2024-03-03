@@ -1,9 +1,0 @@
-{
-    "compilerOptions": {
-        "target": "ES6",
-        "moduleResolution": "node",
-        "strict": true,
-        "strictPropertyInitialization": false
-    },
-    "include": ["**/*.ts", "webpack.common.js", "webpack.dev.js"]
-}
