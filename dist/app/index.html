@@ -17,11 +17,18 @@
 			}
 
 			#buttons_wrapper {
+				width: 320px;
 				display: flex;
-				gap: 10px;
+				flex-wrap: wrap;
+				gap: 5px;
 				position: absolute;
-				right: 0;
-				bottom: 0;
+				right: 20px;
+				bottom: 20px;
+			}
+
+			button {
+				padding: 4px;
+				height: min-content;
 			}
 		</style>
 	</head>
@@ -30,8 +37,8 @@
 		<div id="debug1"></div>
 		<div id="buttons_wrapper">
 			<p id="time"></p>
-			<button id="on">ON</button>
-			<button id="off">OFF</button>
+			<button id="on">On</button>
+			<button id="off">Off</button>
 			<button id="stage2">STAGE 2</button>
 			<button id="stage3">STAGE 3</button>
 			<button id="stage4">STAGE 4</button>
