@@ -4,15 +4,17 @@ import * as THREE from 'three'
 const textureLoader = new THREE.TextureLoader()
 
 export class Flame {
-	material: THREE.ShaderMaterial
-	geometry: THREE.BufferGeometry
-	points: THREE.Points
-	particles: any[] = []
-	alphaSpline: LinearSpline
-	colourSpline: LinearSpline
-	sizeSpline: LinearSpline
-	timeElapsed = 0
-	gdfsghk: number
+	private material: THREE.ShaderMaterial
+	private geometry: THREE.BufferGeometry
+	private points: THREE.Points
+	private particles: any[] = []
+	private alphaSpline: LinearSpline
+	private colourSpline: LinearSpline
+	private sizeSpline: LinearSpline
+	private timeElapsed = 0
+	private gdfsghk: number
+
+	isActive = false
 
 	constructor(parent: THREE.Mesh) {
 		const uniforms = {
@@ -138,7 +140,7 @@ export class Flame {
 		this.geometry.attributes.angle.needsUpdate = true
 	}
 
-	updateParticles(timeElapsed: number) {
+	private updateParticles(timeElapsed: number) {
 		for (let p of this.particles) {
 			p.life -= timeElapsed
 		}
@@ -187,9 +189,21 @@ export class Flame {
 		// })
 	}
 
+	on() {
+		if (this.isActive) return
+
+		this.isActive = true
+	}
+
+	off() {
+		if (!this.isActive) return
+
+		this.isActive = false
+	}
+
 	animate(delta: number) {
 		this.timeElapsed += delta * 0.01
-		this.addParticles(this.timeElapsed)
+		if (this.isActive) this.addParticles(this.timeElapsed)
 		this.updateParticles(this.timeElapsed)
 		this.updateGeometry()
 	}

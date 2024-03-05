@@ -70,11 +70,14 @@ export class MainBooster {
 	on() {
 		if (this.fuel) {
 			this.isActive = true
+
+			this.flame.on()
 		}
 	}
 
 	off() {
 		this.isActive = false
+		this.flame.off()
 	}
 
 	addModel(
