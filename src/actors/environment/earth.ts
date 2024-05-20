@@ -45,7 +45,7 @@ export class Earth {
 		const groundBody = new CANNON.Body()
 
 		groundBody.addShape(new CANNON.Sphere(earthRadius))
-		groundBody.position.y = -earthRadius - 30
+		groundBody.position.y = -earthRadius
 
 		CWorld.addBody(groundBody)
 

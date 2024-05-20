@@ -1,7 +1,7 @@
 import * as CANNON from 'cannon-es'
 import { calculateStepByPosition } from '../utils'
 
-type TypeIndexBody = 4 | 5 | 6 | 7 
+type TypeIndexBody = 4 | 5 | 6 | 7
 
 export class Cannon extends CANNON.World {
 	private bodiesForce = {
@@ -21,7 +21,7 @@ export class Cannon extends CANNON.World {
 
 	private calculateForces(yPos: number, index: TypeIndexBody) {
 		if (yPos < 20000) {
-			this.bodiesForce[index] = -90000.8
+			this.bodiesForce[index] = -120000.8
 		} else if (yPos >= 20000 && yPos < 100000) {
 			this.bodiesForce[index] = calculateStepByPosition(
 				yPos,
@@ -50,11 +50,23 @@ export class Cannon extends CANNON.World {
 			const body = bodies[i]
 			const index = body.index
 
-			if (!(index === 4 || index === 5 || index === 6 || index === 7)) continue
+			if (
+				!(
+					index === 4 ||
+					index === 4 ||
+					index === 5 ||
+					index === 6 ||
+					index === 7
+				)
+			)
+				continue
 
+			console.log(i, body.position)
+			console.log(this.bodiesForce[index])
 			const yPos = body.position.y
 
-			if (frame % 600 === 0) this.calculateForces(yPos, index)
+			if (frame % 600 === 0 || (frame < 600 && this.bodiesForce[index] === 0))
+				this.calculateForces(yPos, index)
 
 			body.applyForce(new CANNON.Vec3(0, this.bodiesForce[index], 0))
 		}

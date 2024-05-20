@@ -1,5 +1,5 @@
 import * as THREE from 'three'
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import { FalconHeavy, LaunchZone, Environment } from '../actors'
 import { Metrics, MetricsParams } from './metrics'
 import { Clock } from './clock'
@@ -87,14 +87,21 @@ export class Scene {
 	private loadingLoop() {
 		const loop = setInterval(() => {
 			if (areObjectValuesTrue(this.loadingStatus)) {
+				const loadScreen = document.getElementById('load-screen')
+				if (loadScreen) loadScreen.style.display = 'none'
 				this.start()
 				clearInterval(loop)
 			}
 		}, 10)
 	}
 
-	private setLoadingStatus(model: TypeLoadInstance) {
+	private setLoadingStatus(model: TypeLoadInstance, text: string) {
 		this.loadingStatus[model] = true
+		const load = document.getElementById('status')
+		if (load) load.innerHTML = text
+
+		const bar = document.getElementById('bar-inner')
+		if (bar) bar.style.width = Number(bar.style.width.slice(0, -1)) + 25 + '%'
 	}
 
 	private setup() {
@@ -108,7 +115,7 @@ export class Scene {
 
 	private addActors() {
 		this.rocket = new FalconHeavy(this.TWorld, () =>
-			this.setLoadingStatus('isRocketLoaded')
+			this.setLoadingStatus('isRocketLoaded', 'Building a Rocket')
 		)
 
 		new LaunchZone(this.TWorld, this.cannon)
@@ -118,9 +125,9 @@ export class Scene {
 		this.environment = new Environment(
 			this.TWorld,
 			this.cannon,
-			() => this.setLoadingStatus('isSunLoaded'),
-			() => this.setLoadingStatus('isEarthLoaded'),
-			() => this.setLoadingStatus('isSkyLoaded')
+			() => this.setLoadingStatus('isSunLoaded', 'Setting up Sun'),
+			() => this.setLoadingStatus('isEarthLoaded', 'Creating Earth'),
+			() => this.setLoadingStatus('isSkyLoaded', 'Painting the Sky')
 		)
 	}
 
@@ -152,18 +159,14 @@ export class Scene {
 			180000000 // Far
 		)
 
-		// Default position
-		this.camera.position.z = 600
-		this.camera.position.y = 300
-
 		this.TWorld.add(this.camera)
 	}
 
 	// Player controls
 	private setupControls() {
 		this.controls = new OrbitControls(this.camera, this.renderer.domElement)
-		this.controls.minDistance = 30
-		this.controls.maxDistance = 300
+		this.controls.minDistance = 80
+		this.controls.maxDistance = 400
 	}
 
 	private setupRenderer() {

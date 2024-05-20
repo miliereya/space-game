@@ -30,10 +30,41 @@
 				padding: 4px;
 				height: min-content;
 			}
+
+			#load-screen {
+				background-color: #fff;
+				position: fixed;
+				width: 100vw;
+				height: 100vh;
+				z-index: 999;
+				display: flex;
+				flex-direction: column;
+				justify-content: center;
+				align-items: center;
+				font-size: 25px;
+			}
+
+			#status-bar {
+				width: 300px;
+				height: 20px;
+				border: 2px solid #5c5c5c;
+			}
+
+			#bar-inner {
+				transition: width 1s;
+				width: 1%;
+				height: 100%;
+				background-color: #5c5c5c;
+				transition: smooth;
+			}
 		</style>
 	</head>
 
 	<body>
+		<div id="load-screen">
+			<p id="status">Loading</p>
+			<div id="status-bar"><div id="bar-inner"></div></div>
+		</div>
 		<div id="debug1"></div>
 		<div id="buttons_wrapper">
 			<p id="time"></p>

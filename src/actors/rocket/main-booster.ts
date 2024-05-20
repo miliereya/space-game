@@ -71,7 +71,7 @@ export class MainBooster {
 		if (this.fuel) {
 			this.isActive = true
 
-			this.flame.on()
+			if (this.isConnected) this.flame.on()
 		}
 	}
 
@@ -123,6 +123,7 @@ export class MainBooster {
 		TWorld: THREE.Scene
 	) {
 		this.isConnected = false
+		this.flame.off()
 
 		this.body.addShape(this.shape, new CANNON.Vec3(0, this.size.y / 2, 0))
 
@@ -167,6 +168,11 @@ export class MainBooster {
 		if (this.isReadyForLanding && this.body.position.y < 1000) {
 			this.isReadyForLanding = false
 			this.isLanding = true
+
+			setTimeout(() => {
+				this.flame.on()
+			}, 4000)
+
 			this.body.velocity.y = -200
 			this.brake1.on()
 			this.brake2.on()
@@ -187,6 +193,7 @@ export class MainBooster {
 			}
 
 			if (this.body.position.y < 15) {
+				this.flame.off()
 				setTimeout(() => {
 					this.brake1.off()
 					this.brake2.off()
@@ -241,7 +248,6 @@ export class MainBooster {
 			this.isCalibrationStarted = false
 
 			this.isReadyForLanding = true
-
 			if (this.position === 2) {
 				this.brake1.on()
 				this.brake3.on()

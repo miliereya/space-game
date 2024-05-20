@@ -24,7 +24,7 @@ export class Camera extends THREE.PerspectiveCamera {
 		this.position.x += xDiff
 		this.position.z += zDiff
 
-		if (this.position.y < 0) this.position.y = 0
+		if (this.position.y < 10) this.position.y = 10
 		this.lookAt(targetPosition)
 	}
 
