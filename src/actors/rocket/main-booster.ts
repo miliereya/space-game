@@ -227,6 +227,11 @@ export class MainBooster {
 	}
 
 	private calibrate() {
+		const mainBoosterBtn = document.getElementById(
+			'Booster' + this.position + 'Calibration'
+		) as HTMLButtonElement
+		if (mainBoosterBtn) mainBoosterBtn.disabled = true
+
 		const destination =
 			this.position === 1 ? -200 : this.position === 3 ? 200 : 0
 		const roundedX = Math.round(this.body.position.x)

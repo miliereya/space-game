@@ -5,6 +5,6 @@ new Scene({
 		// axisHelper: true,
 		// collisions: true,
 		rocketPosition: true,
-		stats: true,
+		// stats: true,
 	},
 })

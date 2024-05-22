@@ -202,6 +202,11 @@ export class FalconHeavy {
 		const mainBooster2Diff = this.mainBooster2.animate(delta)
 		const mainBooster3Diff = this.mainBooster3.animate(delta)
 
+		if (this.stage === 1 && this.model.position.y > 50000) {
+			const stage2btn = document.getElementById('stage2') as HTMLButtonElement
+			if (stage2btn) stage2btn.disabled = false
+		}
+
 		if (this.stage === 4) {
 			this.capHalf1.animate(delta)
 			this.capHalf2.animate(delta)
@@ -240,6 +245,22 @@ export class FalconHeavy {
 		if (this.stage !== 1) return
 		this.stage = 2
 
+		const mainBooster1Btn = document.getElementById(
+			'Booster1Calibration'
+		) as HTMLButtonElement
+		if (mainBooster1Btn) mainBooster1Btn.disabled = false
+
+		const mainBooster3Btn = document.getElementById(
+			'Booster3Calibration'
+		) as HTMLButtonElement
+		if (mainBooster3Btn) mainBooster3Btn.disabled = false
+
+		const stage3btn = document.getElementById('stage3') as HTMLButtonElement
+		if (stage3btn) stage3btn.disabled = false
+
+		const stage2btn = document.getElementById('stage2') as HTMLButtonElement
+		if (stage2btn) stage2btn.disabled = true
+
 		this.mainBooster1.disconnect(this.model, this.body, CWorld, TWorld)
 		this.mainBooster3.disconnect(this.model, this.body, CWorld, TWorld)
 	}
@@ -247,6 +268,17 @@ export class FalconHeavy {
 	startThirdStage(CWorld: CANNON.World, TWorld: THREE.Scene) {
 		if (this.stage !== 2) return
 		this.stage = 3
+
+		const mainBooster2Btn = document.getElementById(
+			'Booster2Calibration'
+		) as HTMLButtonElement
+		if (mainBooster2Btn) mainBooster2Btn.disabled = false
+
+		const stage4btn = document.getElementById('stage4') as HTMLButtonElement
+		if (stage4btn) stage4btn.disabled = false
+
+		const stage3btn = document.getElementById('stage3') as HTMLButtonElement
+		if (stage3btn) stage3btn.disabled = true
 
 		this.mainBooster2.disconnect(this.model, this.body, CWorld, TWorld)
 
@@ -256,6 +288,9 @@ export class FalconHeavy {
 	startFourthStage() {
 		if (this.stage !== 3) return
 		this.stage = 4
+
+		const stage4btn = document.getElementById('stage4') as HTMLButtonElement
+		if (stage4btn) stage4btn.disabled = true
 
 		this.capHalf1.disconnect(this.body)
 		this.capHalf2.disconnect(this.body)

@@ -4,7 +4,16 @@
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
 		<title>Space Game</title>
+		<link rel="stylesheet" href="./index.css" />
 		<style>
+			@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&display=swap');
+			* {
+				font-family: 'Space Grotesk', sans-serif;
+				font-optical-sizing: auto;
+				font-weight: 700;
+				font-style: normal;
+			}
+
 			body {
 				overflow: hidden;
 				margin: 0px;
@@ -26,9 +35,28 @@
 				bottom: 20px;
 			}
 
+			.menu_wrapper {
+				display: flex;
+				gap: 20px;
+				padding: 20px;
+			}
+
+			.menu {
+				position: absolute;
+				background-color: #fff;
+				border: 4px solid rgb(125, 17, 164);
+			}
+
 			button {
-				padding: 4px;
+				padding: 14px;
+				border: 4px solid rgb(125, 17, 164);
+				background-color: rgb(169, 97, 195);
+				color: #fff;
 				height: min-content;
+			}
+
+			button:disabled {
+				opacity: 0.5;
 			}
 
 			#load-screen {
@@ -50,6 +78,26 @@
 				border: 2px solid #5c5c5c;
 			}
 
+			.menu_stages {
+				bottom: 20px;
+				left: 20px;
+			}
+
+			.menu_cameras {
+				top: 20px;
+				left: 20px;
+			}
+			.menu_actives {
+				bottom: 20px;
+				right: 20px;
+			}
+
+			.title {
+				margin-top: 5px;
+				font-size: 24px;
+				color: #000;
+				text-align: center;
+			}
 			#bar-inner {
 				transition: width 1s;
 				width: 1%;
@@ -65,21 +113,36 @@
 			<p id="status">Loading</p>
 			<div id="status-bar"><div id="bar-inner"></div></div>
 		</div>
+		<div class="menu menu_stages">
+			<div class="title">Stages</div>
+			<div class="menu_wrapper">
+				<button id="stage2" disabled>STAGE 2</button>
+				<button id="stage3" disabled>STAGE 3</button>
+				<button id="stage4" disabled>STAGE 4</button>
+			</div>
+		</div>
+		<div class="menu menu_cameras">
+				<div class="title">Cameras</div>
+			<div class="menu_wrapper">
+				<button id="Rocket">Rocket</button>
+				<button id="MainBooster1">Booster 1</button>
+				<button id="MainBooster2">Booster 2</button>
+				<button id="MainBooster3">Booster 3</button>
+			</div>
+		</div>
+		<div class="menu menu_actives">
+				<div class="title">Control Panel</div>
+			<div class="menu_wrapper">
+				<button id="on">Turn On</button>
+				<button id="off">Turn Off</button>
+				<button id="Booster1Calibration" disabled>Calibrate Booster 1</button>
+				<button id="Booster2Calibration" disabled>Calibrate Booster 2</button>
+				<button id="Booster3Calibration" disabled>Calibrate Booster 3</button>
+			</div>
+		</div>
 		<div id="debug1"></div>
 		<div id="buttons_wrapper">
-			<p id="time"></p>
-			<button id="on">On</button>
-			<button id="off">Off</button>
-			<button id="stage2">STAGE 2</button>
-			<button id="stage3">STAGE 3</button>
-			<button id="stage4">STAGE 4</button>
-			<button id="Rocket">Rocket</button>
-			<button id="MainBooster1">MainBooster1</button>
-			<button id="MainBooster2">MainBooster2</button>
-			<button id="MainBooster3">MainBooster3</button>
-			<button id="Booster1Calibration">Booster1Calibration</button>
-			<button id="Booster2Calibration">Booster2Calibration</button>
-			<button id="Booster3Calibration">Booster3Calibration</button>
+			<!-- <p id="time"></p> -->
 		</div>
 		<script type="module" src="bundle.js"></script>
 	</body>
